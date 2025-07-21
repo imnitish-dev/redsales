@@ -37,7 +37,8 @@ class AppTheme {
             ),
           ),
         ),
-        cardTheme: const CardTheme(color: Colors.white));
+        //cardTheme: const CardTheme(color: Colors.white)
+    );
   }
 }
 

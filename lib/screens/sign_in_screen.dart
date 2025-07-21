@@ -142,6 +142,7 @@ class _SignInScreenState extends State<SignInScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         title: Text('Forgot Password', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold)),
         content: Column(

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:logger/logger.dart';
 import 'package:twocliq/main.dart';
@@ -208,12 +209,33 @@ class AppTextField extends StatelessWidget {
                 }
 
                 if(!canBeEmpty && textLimit!=null && value?.length != textLimit ){
-                  return 'Please enter $textLimit digit alphanumeric code';
+                  return 'Please enter $textLimit digit number';
                 }
 
                 // if (!canBeEmpty && (value?.length != textLimit || value!.isEmpty || value == null)) {
                 //   return 'Please enter $textLimit digit alphanumeric code';
                 // }
+
+                if(customKeyboardType == TextInputType.emailAddress){
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(value!)) {
+                    return "Please enter a valid email address";
+                  }
+                }
+
+                if (customKeyboardType == TextInputType.visiblePassword) {
+                  if (value!.length < 8) {
+                    return "Password must be at least 8 characters";
+                  }
+                }
+
+                if(customKeyboardType == TextInputType.phone){
+                  if (value?.length != 10) {
+                    return "Mobile number must be 10 digits";
+                  }
+                  if (!RegExp(r'^[6-9]\d{9}$').hasMatch(value!)) {
+                    return "Please enter a valid Indian mobile number";
+                  }
+                }
 
 
                 if (customKeyboardType == TextInputType.text) {
@@ -273,9 +295,53 @@ class AppTextField extends StatelessWidget {
   }
 }
 
+void showCustomToast({ required
+String msg ,
+}) {
+  Fluttertoast.showToast(
+    msg: msg,
+    toastLength: Toast.LENGTH_SHORT,
+    gravity: ToastGravity.BOTTOM,
+    timeInSecForIosWeb: 1,
+    backgroundColor: Colors.black,
+    textColor: Colors.white,
+    fontSize: 16.0,
+  );
+}
+
+void showErrorToast({ required
+String msg ,
+}) {
+  Fluttertoast.showToast(
+    msg: msg,
+    toastLength: Toast.LENGTH_SHORT,
+    gravity: ToastGravity.BOTTOM,
+    timeInSecForIosWeb: 1,
+    backgroundColor: Colors.redAccent,
+    textColor: Colors.white,
+    fontSize: 16.0,
+  );
+}
+
 bool isNumeric(String? value) {
   if (value == null) {
     return false;
   }
   return double.tryParse(value) != null;
+}
+
+bool validateAllForms(List<GlobalKey<FormState>> formKeys) {
+  bool allValid = true;
+
+  for (var formKey in formKeys) {
+    if (formKey.currentState == null) {
+      continue;
+    }
+
+    if (!formKey.currentState!.validate()) {
+      allValid = false;
+    }
+  }
+
+  return allValid;
 }

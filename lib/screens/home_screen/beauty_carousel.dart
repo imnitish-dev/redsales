@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:twocliq/models/home_screen/seperated_models/horizontal_banner_model.dart';
+
+import '../../models/home_screen/home_screen_model.dart';
 
 class BeautyCarousel extends StatefulWidget {
   const BeautyCarousel({super.key});
@@ -71,3 +74,80 @@ class _BeautyCarouselState extends State<BeautyCarousel> {
     );
   }
 }
+
+class BannerCarousel extends StatefulWidget {
+  final List<HorizontalBannerModel> banners;
+
+  const BannerCarousel({Key? key, required this.banners}) : super(key: key);
+
+  @override
+  State<BannerCarousel> createState() => _BannerCarouselState();
+}
+
+class _BannerCarouselState extends State<BannerCarousel> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        CarouselSlider.builder(
+          itemCount: widget.banners.length,
+          itemBuilder: (context, index, realIndex) {
+            final banner = widget.banners[index];
+            return GestureDetector(
+              onTap: () {
+                // Handle banner click (navigate based on clickDetails)
+                final target = banner.clickDetails?.targetScreen;
+                final targetData = banner.clickDetails?.targetData;
+                debugPrint("Clicked Banner -> $target : $targetData");
+                // TODO: Implement navigation logic based on target
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  banner.imageUrl??"",
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey.shade200,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.broken_image, size: 40),
+                  ),
+                ),
+              ),
+            );
+          },
+          options: CarouselOptions(
+            height: 180.h,
+            viewportFraction: 0.9,
+            enlargeCenterPage: true,
+            autoPlay: true,
+            autoPlayInterval: const Duration(seconds: 4),
+            onPageChanged: (index, reason) {
+              setState(() => _currentIndex = index);
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.banners.length, (index) {
+            final isActive = index == _currentIndex;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              height: 8,
+              width: isActive ? 20 : 8,
+              decoration: BoxDecoration(
+                color: isActive ? Colors.red : Colors.red.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+

@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:twocliq/provider/cart_provider.dart';
+import 'package:twocliq/provider/customer_profile_provider.dart';
 import 'package:twocliq/screens/cart_screen/cart_screen.dart';
 import 'package:twocliq/screens/home_screen/home_screen.dart';
+import 'package:twocliq/screens/home_screen/test_home.dart';
 import 'package:twocliq/screens/profile_screen/profile_screen.dart';
 import '../helper/constants.dart';
+import '../provider/home_provider.dart';
 
 class MainHomeScreen extends StatefulWidget {
   const MainHomeScreen({super.key});
@@ -17,9 +22,25 @@ class MainHomeScreen extends StatefulWidget {
 class _MainHomeScreenState extends State<MainHomeScreen> {
   int screenIndex = 0;
 
+  void callData(){
+    Future.microtask(() {
+      Provider.of<HomeProvider>(context, listen: false).loadHomeData();
+      Provider.of<CartProvider>(context, listen: false).loadCartData();
+      Provider.of<CustomerProfileProvider>(context, listen: false).loadProfileData();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    callData();
+  }
+
   final List<Widget> listOfScreens = const [
+    //HomeScreen(),
+    TestHome(),
+   // TestHome(),
     HomeScreen(),
-    Center(child: Text("Explore Screen")),
     CartScreen(),
     ProfileScreen(),
   ];
@@ -28,8 +49,11 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(child: listOfScreens[screenIndex]),
-      extendBody: true, // so navbar floats over body background
+      body: SafeArea(child: IndexedStack(
+        index: screenIndex,
+        children: listOfScreens,
+      )),
+      extendBody: true,
       bottomNavigationBar: Container(
         height: 80.h,
         decoration: BoxDecoration(

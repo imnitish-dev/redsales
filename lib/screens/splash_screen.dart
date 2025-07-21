@@ -27,10 +27,19 @@ class _SplashScreenState extends State<SplashScreen> {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark));
+
   }
 
   Future<void> _checkSession() async {
     try {
+
+      String token = await getLoginToken();
+      String deviceID = await getDeviceId();
+
+      logInfo("deviceID $deviceID");
+
+      logInfo("loginToken : $token");
+
       // Check internet connection first
       final isConnected = await checkNetConnectivity();
 

@@ -2,7 +2,14 @@ import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:twocliq/helper/constants.dart';
+import 'package:twocliq/provider/cart_provider.dart';
+import 'package:twocliq/provider/customer_profile_provider.dart';
+import 'package:twocliq/screens/cart_screen/widgets/checkout_footer_widget.dart';
+import 'package:twocliq/screens/cart_screen/widgets/voucher_widget.dart';
+
+import '../../services/customer_profile_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -17,35 +24,55 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark));
+    setAddressData();
+  }
+
+  void setAddressData() {
+    var profileProvider = Provider.of<CustomerProfileProvider>(context, listen: false);
+      final city = profileProvider.customerProfile?.address?.city;
+      if (city != null && city.isNotEmpty) {
+        setState(() {
+          addressInfo.city = city;
+        });
+      }
+
+    final address = profileProvider.customerProfile?.address?.address;
+    if (address != null && address.isNotEmpty) {
+      setState(() {
+        addressInfo.address = address;
+      });
+    }
+
+    final state = profileProvider.customerProfile?.address?.state;
+    if (state != null && state.isNotEmpty) {
+      setState(() {
+        addressInfo.state = state;
+      });
+    }
+
+    final pinCode = profileProvider.customerProfile?.address?.pinCode;
+    if (pinCode != null && pinCode.isNotEmpty) {
+      setState(() {
+        addressInfo.pinCode = pinCode;
+      });
+    }
+
   }
 
   AddressInfo addressInfo = AddressInfo(
-    title: "Shipping Address",
-    details: "26, Duong So 2, Thao Dien Ward, An Phu, District 2, Ho Chi Minh city",
-  );
+      // title: "Shipping Address",
+      // details: "26, Duong So 2, Thao Dien Ward, An Phu, District 2, Ho Chi Minh city",
+      );
 
   ContactInfo contactInfo = ContactInfo(
     phone: "+91- 97704-09874",
     email: "amandegar213@gmail.com",
   );
 
-  List<CartItem> cartItems = [
-    CartItem(
-      imageUrl: "https://picsum.photos/200/305",
-      description: "Lorem ipsum dolor sit amet consectetur.",
-      price: "₹699",
-      quantity: 1,
-    ),
-    CartItem(
-      imageUrl: "https://picsum.photos/200/306",
-      description: "Lorem ipsum dolor sit amet consectetur.",
-      price: "₹699",
-      quantity: 1,
-    ),
-  ];
+
 
   Voucher? selectedVoucher;
-  String selectedPaymentMethod = "Card";
+  String selectedPaymentMethod = "COD";
 
   void updateAddress(AddressInfo newAddress) {
     setState(() {
@@ -59,17 +86,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
   }
 
-  void updateCartItems(List<CartItem> updatedCart) {
-    setState(() {
-      cartItems = updatedCart;
-    });
-  }
 
-  void applyVoucher(Voucher voucher) {
-    setState(() {
-      selectedVoucher = voucher;
-    });
-  }
+
+
 
   void changePaymentMethod(String method) {
     setState(() {
@@ -83,11 +102,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            customSizedBox(height: 20.h),
             Text(
               "Payment",
               style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20.h),
+            customSizedBox(height: 20.h),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -97,32 +117,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       addressInfo: addressInfo,
                       onEdit: updateAddress,
                     ),
-                    SizedBox(height: 12.h),
+                    customSizedBox(height: 12.h),
                     ContactWidget(
                       contactInfo: contactInfo,
                       onEdit: updateContact,
                     ),
-                    SizedBox(height: 20.h),
-                    CartItemsSection(
-                      cartItems: cartItems,
-                      onCartChanged: updateCartItems,
-                    ),
-                    SizedBox(height: 20.h),
-                    VoucherWidget(
-                      selectedVoucher: selectedVoucher,
-                      onApply: applyVoucher,
-                    ),
-                    SizedBox(height: 20.h),
+                    customSizedBox(height: 20.h),
+                    const CartItemsSection(),
+                    customSizedBox(height: 20.h),
+                     const VoucherWidget(),
+                    customSizedBox(height: 20.h),
                     PaymentMethodWidget(
                       selectedMethod: selectedPaymentMethod,
                       onChange: changePaymentMethod,
                     ),
-                    SizedBox(height: 20.h),
+                    customSizedBox(height: 20.h),
                   ],
                 ),
               ),
             ),
-            CheckoutFooter(total: "₹12,00"),
+             CheckoutFooter(),
           ],
         ),
       ),
@@ -130,37 +144,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 }
 
-class CartItem {
-  final String imageUrl;
-  final String description;
-  final String price;
-  final int quantity;
 
-  CartItem({
-    required this.imageUrl,
-    required this.description,
-    required this.price,
-    required this.quantity,
-  });
-
-  CartItem copyWith({String? imageUrl, String? description, String? price, int? quantity}) {
-    return CartItem(
-      imageUrl: imageUrl ?? this.imageUrl,
-      description: description ?? this.description,
-      price: price ?? this.price,
-      quantity: quantity ?? this.quantity,
-    );
-  }
-}
 
 class CartItemsSection extends StatefulWidget {
-  final List<CartItem> cartItems;
-  final ValueChanged<List<CartItem>> onCartChanged;
-
   const CartItemsSection({
     super.key,
-    required this.cartItems,
-    required this.onCartChanged,
   });
 
   @override
@@ -168,25 +156,13 @@ class CartItemsSection extends StatefulWidget {
 }
 
 class _CartItemsSectionState extends State<CartItemsSection> {
-  late List<CartItem> localCart;
 
-  @override
-  void initState() {
-    super.initState();
-    localCart = List.from(widget.cartItems);
-  }
 
-  void updateQuantity(int index, int delta) {
-    setState(() {
-      localCart[index] = localCart[index].copyWith(
-        quantity: (localCart[index].quantity + delta).clamp(1, 99),
-      );
-      widget.onCartChanged(localCart);
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
+    final cartProvider = Provider.of<CartProvider>(context);
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, top: 15.h),
       child: Column(
@@ -213,8 +189,8 @@ class _CartItemsSectionState extends State<CartItemsSection> {
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Text(
-                      "${localCart.length}",
-                      style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold),
+                      "${cartProvider.cartList?.cartProducts.length}",
+                      style: customTextStyle(color: Colors.pink, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -227,9 +203,9 @@ class _CartItemsSectionState extends State<CartItemsSection> {
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: localCart.length,
+            itemCount: cartProvider.cartList?.cartProducts.length,
             itemBuilder: (context, index) {
-              final item = localCart[index];
+              final item = cartProvider.cartList?.cartProducts[index];
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
                 child: Row(
@@ -256,7 +232,7 @@ class _CartItemsSectionState extends State<CartItemsSection> {
                             padding: const EdgeInsets.all(4.0),
                             child: CircleAvatar(
                               radius: 32.r,
-                              backgroundImage: NetworkImage(item.imageUrl),
+                              backgroundImage: NetworkImage(item?.productImage??""),
                               onBackgroundImageError: (_, __) => const Icon(Icons.broken_image),
                             ),
                           ),
@@ -274,8 +250,8 @@ class _CartItemsSectionState extends State<CartItemsSection> {
                             ),
                             child: Center(
                               child: Text(
-                                "${item.quantity}",
-                                style: TextStyle(
+                                "${item?.quantity==null? "" : item?.quantity.toString()}",
+                                style: customTextStyle(
                                   color: Colors.pink,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12.sp,
@@ -291,7 +267,7 @@ class _CartItemsSectionState extends State<CartItemsSection> {
                     /// Description
                     Expanded(
                       child: Text(
-                        item.description,
+                        item?.productTitle??'',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 14.sp, color: Colors.black.withOpacity(0.8)),
@@ -300,7 +276,7 @@ class _CartItemsSectionState extends State<CartItemsSection> {
 
                     /// Price
                     Text(
-                      item.price,
+                      item?.total?.toString() ?? "",
                       style: TextStyle(
                         fontSize: 16.sp,
                         color: Colors.pink,
@@ -318,19 +294,41 @@ class _CartItemsSectionState extends State<CartItemsSection> {
   }
 }
 
-
-
 class AddressInfo {
-  final String title;
-  final String details;
+   String? addressType;
+   String? address;
+   String? area;
+   String? landmark;
+   String? pinCode;
+   String? state;
+   String? city;
 
-  AddressInfo({required this.title, required this.details});
+  AddressInfo(
+      {
+         this.addressType,
+       this.address,
+       this.state,
+       this.area,
+       this.landmark,
+       this.pinCode,
+       this.city});
 
-  AddressInfo copyWith({String? title, String? details}) {
+  AddressInfo copyWith(
+      {String? addressType,
+      String? address,
+      String? area,
+      String? landmark,
+      String? pinCode,
+      String? state,
+      String? city}) {
     return AddressInfo(
-      title: title ?? this.title,
-      details: details ?? this.details,
-    );
+        address: address ?? this.address,
+        addressType: addressType ?? this.addressType,
+        area: area ?? this.area,
+        landmark: landmark ?? this.landmark,
+        pinCode: pinCode ?? this.pinCode,
+        state: state ?? this.state,
+        city: city ?? this.city);
   }
 }
 
@@ -383,10 +381,9 @@ class AddressWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(addressInfo.title,
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text("Shipping Address", style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 4.h),
-                  Text(addressInfo.details, style: TextStyle(fontSize: 13.sp)),
+                  Text(addressInfo.address??"", style: TextStyle(fontSize: 13.sp)),
                 ],
               ),
             ),
@@ -409,11 +406,255 @@ class AddressWidget extends StatelessWidget {
   }
 
   /// Opens modal to edit the address
-  Future<AddressInfo?> _showEditAddressModal(
-      BuildContext context, AddressInfo initialAddress) async {
-    final addressController = TextEditingController(text: initialAddress.details);
-    final cityController = TextEditingController(text: "Bengaluru, Karnataka");
-    final postalController = TextEditingController(text: "560023");
+  Future<AddressInfo?> _showEditAddressModal(BuildContext context, AddressInfo initialAddress) async {
+    final addressController = TextEditingController(text: initialAddress.address);
+    final areaController = TextEditingController(text: initialAddress.area);
+    final landmarkController = TextEditingController(text: initialAddress.landmark);
+    final cityController = TextEditingController(text: initialAddress.city);
+    final pinCodeController = TextEditingController(text: initialAddress.pinCode);
+    final stateController = TextEditingController(text: initialAddress.state);
+    bool isLoading = false;
+
+    return await showModalBottomSheet<AddressInfo>(
+      backgroundColor: Colors.white,
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Shipping Address", style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  customSizedBox(height: 20.h),
+                  DottedLine(
+                    dashColor: Colors.grey.withOpacity(0.4),
+                    dashLength: 5,
+                    dashGapLength: 3,
+                    lineThickness: 2,
+                  ),
+
+                  customSizedBox(height: 20.h),
+
+                  // Country (read-only)
+                  Text("Country", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+                  customSizedBox(height: 4.h),
+                  Text("India", style: customTextStyle(color: Colors.grey, fontSize: 14.sp)),
+
+                  customSizedBox(height: 12.h),
+                  Text("Address", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+                  customSizedBox(height: 5.h),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: TextField(
+                      controller: addressController,
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none),
+                    ),
+                  ),
+                  customSizedBox(height: 18.h),
+
+
+
+                  customSizedBox(height: 12.h),
+                  Text("Area", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+                  customSizedBox(height: 5.h),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: TextField(
+                      controller: areaController,
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none),
+                    ),
+                  ),
+                  customSizedBox(height: 18.h),
+
+                  customSizedBox(height: 12.h),
+                  Text("Landmark", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+                  customSizedBox(height: 5.h),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: TextField(
+                      controller: landmarkController,
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none),
+                    ),
+                  ),
+                  customSizedBox(height: 18.h),
+
+
+
+
+
+                  Text("Town / City", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+                  customSizedBox(height: 5.h),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade100.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: TextField(
+                      controller: cityController,
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none),
+                    ),
+                  ),
+
+                  customSizedBox(height: 12.h),
+                  Text("Postcode", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+                  customSizedBox(height: 5.h),
+                  Container(
+                    alignment: Alignment.bottomLeft,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade100.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: TextField(
+                      controller: pinCodeController,
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none),
+                    ),
+                  ),
+                  /*TextField(
+                controller: postalController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                      borderSide: BorderSide.none),
+                ),
+              ),*/
+
+                  SizedBox(height: 20.h),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48.h,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pink,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () async {
+
+                        if(addressController.text.isNotEmpty && areaController.text.isNotEmpty && pinCodeController.text.isNotEmpty && cityController.text.isNotEmpty){
+
+                          logInfo('addressType : "Home"');
+                          logInfo('address : ${addressController.text}');
+                          logInfo('area : ${areaController.text}');
+                          logInfo('landmark : ${landmarkController.text}');
+                          logInfo('pincode : ${pinCodeController.text}');
+                          logInfo('city : ${cityController.text}');
+                          logInfo('state : "Maharashtra"');
+
+
+
+                          isLoading = await CustomerService.addCustomerAddress(
+                            addressType: "Home",
+                            address: addressController.text,
+                            area: areaController.text,
+                            landmark: landmarkController.text.isEmpty ? " " : landmarkController.text,
+                            pincode: pinCodeController.text,
+                            city: cityController.text,
+                            state: "Maharashtra",
+                          );
+
+
+
+                          if(isLoading){
+                            showCustomToast(msg: "address updated!");
+                            Navigator.pop(
+                                context,
+                                initialAddress.copyWith(
+                                    city: cityController.text,
+                                    address: addressController.text,
+                                    state: "Maharashtra",
+                                    addressType: 'Home',
+                                    area: areaController.text,
+                                    landmark: landmarkController.text.isEmpty ? " " : landmarkController.text,
+                                    pinCode: pinCodeController.text));
+                          }else{
+                            showCustomToast(msg: 'failed to update address');
+                          }
+
+                        }else{
+                          showCustomToast(msg: "please fill all fields");
+                        }
+
+
+                      },
+                      child: isLoading ? SizedBox(width: 5.r,height: 5.r,child: CircularProgressIndicator(color: Colors.white),) : Text("Save Changes",
+                          style: customTextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
 
     return await showModalBottomSheet<AddressInfo>(
       backgroundColor: Colors.white,
@@ -438,9 +679,7 @@ class AddressWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Shipping Address",
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text("Shipping Address", style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
@@ -458,56 +697,90 @@ class AddressWidget extends StatelessWidget {
               customSizedBox(height: 20.h),
 
               // Country (read-only)
-               Text("Country",
-                  style: customTextStyle(fontWeight: FontWeight.w600,fontSize: 16.sp)
-               ),
+              Text("Country", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
               customSizedBox(height: 4.h),
-               Text("India",
-                  style: TextStyle(color: Colors.grey, fontSize: 14)),
+              Text("India", style: customTextStyle(color: Colors.grey, fontSize: 14.sp)),
 
               customSizedBox(height: 12.h),
-               Text("Address",
-                  style: customTextStyle(fontWeight: FontWeight.w600,fontSize: 16.sp)
-              ),
+              Text("Address", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
               customSizedBox(height: 5.h),
               Container(
                 alignment: Alignment.bottomLeft,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(18.r),
-                  border: Border.all(
-                    color: Colors.black54.withOpacity(0.2),
-                    width: 0.5
-                  )
-                ),
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(18.r),
+                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 child: TextField(
                   controller: addressController,
                   decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    errorBorder: InputBorder.none
-                  ),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none),
                 ),
               ),
               customSizedBox(height: 18.h),
 
-               Text("Town / City",
-                  style: customTextStyle(fontWeight: FontWeight.w600,fontSize: 16.sp)
-               ),
+
+
+              customSizedBox(height: 12.h),
+              Text("Area", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+              customSizedBox(height: 5.h),
+              Container(
+                alignment: Alignment.bottomLeft,
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(18.r),
+                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: TextField(
+                  controller: areaController,
+                  decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none),
+                ),
+              ),
+              customSizedBox(height: 18.h),
+
+              customSizedBox(height: 12.h),
+              Text("Landmark", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
+              customSizedBox(height: 5.h),
+              Container(
+                alignment: Alignment.bottomLeft,
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(18.r),
+                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: TextField(
+                  controller: landmarkController,
+                  decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none),
+                ),
+              ),
+              customSizedBox(height: 18.h),
+
+
+
+
+
+              Text("Town / City", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
               customSizedBox(height: 5.h),
               Container(
                 alignment: Alignment.bottomLeft,
                 decoration: BoxDecoration(
                     color: Colors.grey.shade100.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(
-                        color: Colors.black54.withOpacity(0.2),
-                        width: 0.5
-                    )
-                ),
+                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 child: TextField(
                   controller: cityController,
@@ -516,38 +789,28 @@ class AddressWidget extends StatelessWidget {
                       focusedBorder: InputBorder.none,
                       disabledBorder: InputBorder.none,
                       enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none
-                  ),
+                      errorBorder: InputBorder.none),
                 ),
               ),
 
-
-
               customSizedBox(height: 12.h),
-              Text("Postcode",
-                  style: customTextStyle(fontWeight: FontWeight.w600,fontSize: 16.sp)
-              ),
+              Text("Postcode", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
               customSizedBox(height: 5.h),
               Container(
                 alignment: Alignment.bottomLeft,
                 decoration: BoxDecoration(
                     color: Colors.grey.shade100.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(
-                        color: Colors.black54.withOpacity(0.2),
-                        width: 0.5
-                    )
-                ),
+                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 child: TextField(
-                  controller: postalController,
+                  controller: pinCodeController,
                   decoration: const InputDecoration(
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       disabledBorder: InputBorder.none,
                       enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none
-                  ),
+                      errorBorder: InputBorder.none),
                 ),
               ),
               /*TextField(
@@ -568,21 +831,46 @@ class AddressWidget extends StatelessWidget {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.pink,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () {
-                    Navigator.pop(
-                        context,
-                        initialAddress.copyWith(
-                          details: addressController.text,
-                        ));
+                  onPressed: () async {
+
+                    if(addressController.text.isEmpty || areaController.text.isEmpty || pinCodeController.text.isEmpty || cityController.text.isEmpty){
+
+
+                       isLoading = await CustomerService.addCustomerAddress(
+                          addressType: "Home",
+                          address: addressController.text,
+                          area: areaController.text,
+                          landmark: landmarkController.text,
+                          pincode: pinCodeController.text,
+                          city: cityController.text,
+                          state: "Maharashtra");
+
+
+
+                       if(isLoading){
+                         showCustomToast(msg: "address updated!");
+                         Navigator.pop(
+                             context,
+                             initialAddress.copyWith(
+                                 city: cityController.text,
+                                 address: addressController.text,
+                                 state: "Maharashtra",
+                                 addressType: 'Home',
+                                 area: areaController.text,
+                                 landmark: landmarkController.text,
+                                 pinCode: pinCodeController.text));
+                       }else{
+                         showCustomToast(msg: 'failed to update address');
+                       }
+
+                    }
+
+
                   },
                   child: const Text("Save Changes",
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
               SizedBox(height: 20.h),
@@ -642,81 +930,7 @@ class ContactWidget extends StatelessWidget {
   }
 }
 
-class VoucherWidget extends StatelessWidget {
-  final Voucher? selectedVoucher;
-  final ValueChanged<Voucher> onApply;
 
-  const VoucherWidget({
-    super.key,
-    required this.selectedVoucher,
-    required this.onApply,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final sampleVoucher = Voucher(
-      code: "SAVE200",
-      description: "Save 200 on this order",
-      discount: 200,
-    );
-
-    return Padding(
-      padding:  EdgeInsets.only(left: 20.w,right: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Add Voucher",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18.sp,
-            ),
-          ),
-          customSizedBox(height: 15.h),
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: Colors.pink.shade50,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.card_giftcard, color: Colors.pink),
-                    SizedBox(width: 8.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sampleVoucher.description,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const Text(
-                          "View all Vouchers >",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () => onApply(sampleVoucher),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size(80, 40), // Fix size to avoid constraint issues
-                  ),
-                  child: const Text("Apply", style: TextStyle(color: Colors.pink)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class PaymentMethodWidget extends StatelessWidget {
   final String selectedMethod;
@@ -730,10 +944,10 @@ class PaymentMethodWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final methods = ["Card", "UPI", "Net Banking"];
+    final methods = ['COD', "Card", "UPI", "Net Banking", ];
 
     return Padding(
-      padding:  EdgeInsets.only(left: 20.w,right: 20.w),
+      padding: EdgeInsets.only(left: 20.w, right: 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -754,7 +968,9 @@ class PaymentMethodWidget extends StatelessWidget {
                   final isSelected = selectedMethod == method;
 
                   return GestureDetector(
-                    onTap: () => onChange(method),
+                    onTap: () {
+                      onChange(method);
+                    },
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                       decoration: BoxDecoration(
@@ -766,13 +982,13 @@ class PaymentMethodWidget extends StatelessWidget {
                         ),
                         boxShadow: isSelected
                             ? [
-                          BoxShadow(
-                            color: Colors.pink.withOpacity(0.01),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
+                                BoxShadow(
+                                  color: Colors.pink.withOpacity(0.01),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
                             : [],
                       ),
                       child: Text(
@@ -795,173 +1011,4 @@ class PaymentMethodWidget extends StatelessWidget {
   }
 }
 
-class CheckoutFooter extends StatelessWidget {
-  final String total;
-  const CheckoutFooter({super.key, required this.total});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "Total ",
-                      style: customTextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                    ),
-                    TextSpan(
-                      text: total, // your total string like "₹12,00"
-                      style: customTextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.normal,
-                        color: Colors.pink,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  showPaymentSummary(context);
-                  //print("Payment Summary clicked");
-                },
-                child: RichText(
-                  text: TextSpan(
-                    text: "Payment Summary",
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontFamily: 'Poppins',
-                      color: Colors.yellow.shade800,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              )
-
-
-            ],
-          ),
-          SizedBox(
-            height: 60.h,
-            width: 200.w,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                backgroundColor: Colors.pink,
-              ),
-              child: Text("Pay", style: customTextStyle(color: Colors.white,fontSize: 20.sp)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void showPaymentSummary(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Wrap( // Wrap allows the modal to size itself to content
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Payment Summary",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: Colors.black54),
-                      onPressed: () => Navigator.pop(context),
-                    )
-                  ],
-                ),
-                DottedLine(
-                  dashColor: Colors.grey.withOpacity(0.4),
-                  dashLength: 5,
-                  dashGapLength: 3,
-                  lineThickness: 2,
-                ),
-                SizedBox(height: 12),
-                _buildSummaryRow("Item Total", "₹699"),
-                _buildSummaryRow("Discount Tax", "₹02.00"),
-                _buildSummaryRow("Delivery Free| 4.7 kms", "₹26.00"),
-                _buildSummaryRow("Wallet Deduction", "₹00.00"),
-                _buildSummaryRow("Delivery Tip", "Add Tip", isLink: true),
-                DottedLine(
-                  dashColor: Colors.grey.withOpacity(0.4),
-                  dashLength: 5,
-                  dashGapLength: 3,
-                  lineThickness: 2,
-                ),
-                SizedBox(height: 8),
-                _buildSummaryRow("To Pay", "₹699", isBold: true),
-                SizedBox(height: 16),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSummaryRow(String title, String value,
-      {bool isBold = false, bool isLink = false}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isLink ? Colors.pink : Colors.grey.shade700,
-              decoration:
-              isLink ? TextDecoration.underline : TextDecoration.none,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isLink ? Colors.pink : Colors.black,
-              decoration:
-              isLink ? TextDecoration.underline : TextDecoration.none,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-}
