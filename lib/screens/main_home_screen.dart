@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:twocliq/provider/cart_provider.dart';
 import 'package:twocliq/provider/customer_profile_provider.dart';
+import 'package:twocliq/provider/orders_provider.dart';
 import 'package:twocliq/screens/cart_screen/cart_screen.dart';
 import 'package:twocliq/screens/home_screen/home_screen.dart';
 import 'package:twocliq/screens/home_screen/test_home.dart';
@@ -27,6 +28,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       Provider.of<HomeProvider>(context, listen: false).loadHomeData();
       Provider.of<CartProvider>(context, listen: false).loadCartData();
       Provider.of<CustomerProfileProvider>(context, listen: false).loadProfileData();
+      Provider.of<OrdersProvider>(context, listen: false).loadOrders();
     });
   }
 

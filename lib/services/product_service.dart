@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:twocliq/helper/constants.dart';
 import 'package:twocliq/models/product_detail_model.dart';
 import '../helper/apirequest.dart';
 import '../models/home_screen/home_screen_model.dart';
@@ -56,6 +57,9 @@ class ProductService {
     required int finalAmount,
     required String paymentMode,
   }) async {
+
+    logInfo('placing order..');
+
     final url = Uri.parse("$_hostUrlLOCAL/orders/add");
 
     try {
@@ -81,6 +85,8 @@ class ProductService {
         "paymentMode": paymentMode,
       });
 
+      logInfo(body);
+
       final response = await http.post(url, headers: headers, body: body).timeout(
         const Duration(seconds: 10),
         onTimeout: () => throw Exception("Request timed out."),
@@ -88,6 +94,7 @@ class ProductService {
 
       if (response.statusCode == 200) {
         final jsonBody = jsonDecode(response.body);
+        logInfo(jsonBody);
         return jsonBody['success'] == 1;
       } else {
         return false;

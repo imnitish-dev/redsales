@@ -9,6 +9,7 @@ import 'package:twocliq/provider/customer_profile_provider.dart';
 import 'package:twocliq/screens/cart_screen/widgets/checkout_footer_widget.dart';
 import 'package:twocliq/screens/cart_screen/widgets/voucher_widget.dart';
 
+import '../../models/customer_profile_model.dart';
 import '../../services/customer_profile_service.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -27,42 +28,76 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setAddressData();
   }
 
+  String? selectedAddressID;
+  Address? currentSelectedAddress;
+  bool isPaid = false;
+
   void setAddressData() {
+
+    logInfo("heuhe");
+
+
+
     var profileProvider = Provider.of<CustomerProfileProvider>(context, listen: false);
-      final city = profileProvider.customerProfile?.address?.city;
+
+
+    final addresses = profileProvider.customerProfile?.addresses;
+
+    logInfo("listOfAddress : $addresses");
+
+    if (addresses != null && addresses.isNotEmpty) {
+
+      selectedAddressID = addresses.first.addressId;
+
+      currentSelectedAddress = profileProvider.customerProfile?.addresses?.firstWhere((element) {
+        return element.addressId == selectedAddressID;
+      });
+
+
+
+      logInfo("currentSelectedAddress : $currentSelectedAddress");
+
+
+
+
+     /* final city = currentSelectedAddress?.city;
       if (city != null && city.isNotEmpty) {
         setState(() {
           addressInfo.city = city;
         });
-      }
+      }*/
 
-    final address = profileProvider.customerProfile?.address?.address;
-    if (address != null && address.isNotEmpty) {
-      setState(() {
-        addressInfo.address = address;
-      });
+     /* final address = currentSelectedAddress?.address;
+      if (address != null && address.isNotEmpty) {
+        setState(() {
+          addressInfo.address = address;
+        });
+      }*/
+
+    /*  final state = currentSelectedAddress?.state;
+      if (state != null && state.isNotEmpty) {
+        setState(() {
+          addressInfo.state = state;
+        });
+      }*/
+
+    /*  final pinCode = currentSelectedAddress?.pincode;
+      if (pinCode != null && pinCode.isNotEmpty) {
+        setState(() {
+          addressInfo.pinCode = pinCode;
+        });
+      }*/
+
     }
 
-    final state = profileProvider.customerProfile?.address?.state;
-    if (state != null && state.isNotEmpty) {
-      setState(() {
-        addressInfo.state = state;
-      });
-    }
 
-    final pinCode = profileProvider.customerProfile?.address?.pinCode;
-    if (pinCode != null && pinCode.isNotEmpty) {
-      setState(() {
-        addressInfo.pinCode = pinCode;
-      });
-    }
 
   }
 
-  AddressInfo addressInfo = AddressInfo(
+ /* AddressInfo addressInfo = AddressInfo(
       // title: "Shipping Address",
       // details: "26, Duong So 2, Thao Dien Ward, An Phu, District 2, Ho Chi Minh city",
-      );
+      );*/
 
   ContactInfo contactInfo = ContactInfo(
     phone: "+91- 97704-09874",
@@ -74,9 +109,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Voucher? selectedVoucher;
   String selectedPaymentMethod = "COD";
 
-  void updateAddress(AddressInfo newAddress) {
+  void updateAddress(Address newAddress) {
     setState(() {
-      addressInfo = newAddress;
+      currentSelectedAddress = newAddress;
     });
   }
 
@@ -105,16 +140,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
             customSizedBox(height: 20.h),
             Text(
               "Payment",
-              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+              style: customTextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
             ),
-            customSizedBox(height: 20.h),
+            customSizedBox(height: 10.h),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
                     AddressWidget(
-                      addressInfo: addressInfo,
+                      addressInfo: currentSelectedAddress,
                       onEdit: updateAddress,
                     ),
                     customSizedBox(height: 12.h),
@@ -136,7 +171,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
-             CheckoutFooter(),
+             CheckoutFooter(selectedAddress: currentSelectedAddress),
           ],
         ),
       ),
@@ -355,8 +390,8 @@ class Voucher {
 }
 
 class AddressWidget extends StatelessWidget {
-  final AddressInfo addressInfo;
-  final ValueChanged<AddressInfo> onEdit;
+  final Address? addressInfo;
+  final ValueChanged<Address> onEdit;
 
   const AddressWidget({
     super.key,
@@ -381,9 +416,9 @@ class AddressWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Shipping Address", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text("Shipping Address", style: customTextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 4.h),
-                  Text(addressInfo.address??"", style: TextStyle(fontSize: 13.sp)),
+                  Text(addressInfo?.address??"", style: customTextStyle(fontSize: 13.sp)),
                 ],
               ),
             ),
@@ -392,7 +427,7 @@ class AddressWidget extends StatelessWidget {
               onPressed: () async {
                 final updatedAddress = await _showEditAddressModal(
                   context,
-                  addressInfo,
+                 // addressInfo,
                 );
                 if (updatedAddress != null) {
                   onEdit(updatedAddress);
@@ -405,8 +440,300 @@ class AddressWidget extends StatelessWidget {
     );
   }
 
-  /// Opens modal to edit the address
-  Future<AddressInfo?> _showEditAddressModal(BuildContext context, AddressInfo initialAddress) async {
+  Future<Address?> _showEditAddressModal(BuildContext context) async {
+    final profileProvider = Provider.of<CustomerProfileProvider>(context, listen: false);
+    final addresses = profileProvider.customerProfile?.addresses ?? [];
+
+    Address? selectedAddress = addresses.isNotEmpty ? addresses.first : null;
+
+    return await showModalBottomSheet<Address>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 16,
+                  right: 16,
+                  top: 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+
+                    customSizedBox(height: 40.h),
+
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Select Address",
+                            style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+
+                    // Address List
+                    if (addresses.isNotEmpty)
+                      Flexible(
+                        child: ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: addresses.length,
+                          itemBuilder: (context, index) {
+                            final address = addresses[index];
+                            final isSelected = selectedAddress?.addressId == address.addressId;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  selectedAddress = address; // update selected
+                                });
+                              },
+                              child: Container(
+                                margin: EdgeInsets.symmetric(vertical: 8.h),
+                                padding: EdgeInsets.all(12.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.pink : Colors.grey.shade300,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      address.addressType ?? "Home",
+                                      style: customTextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      "${address.address}, ${address.area}, ${address.city} - ${address.pincode}",
+                                      style: customTextStyle(fontSize: 14.sp, color: Colors.black54),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      Center(child: Text("No addresses found", style: customTextStyle(color: Colors.grey))),
+
+                    SizedBox(height: 16.h),
+
+                    // Confirm Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.pink,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, selectedAddress); // Return selected address
+                        },
+                        child: Text(
+                          "Use This Address",
+                          style: customTextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 8.h),
+
+                    // Edit Addresses Button
+                    /*SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.pink),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context); // close modal first
+                        //  Navigator.pushNamed(context, '/addressDetails'); // navigate to edit screen
+                        },
+                        child: Text(
+                          "Edit Addresses",
+                          style: customTextStyle(fontSize: 16.sp, color: Colors.pink, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),*/
+
+                    SizedBox(height: 20.h),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
+/*  Future<Address?> _showEditAddressModal(BuildContext context) async {
+    final profileProvider = Provider.of<CustomerProfileProvider>(context, listen: false);
+    final addresses = profileProvider.customerProfile?.addresses ?? [];
+
+    Address? selectedAddress = addresses.isNotEmpty ? addresses.first : null;
+
+    return await showModalBottomSheet<Address>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 16,
+                  right: 16,
+                  top: 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Select Address", style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+
+                    // Address List
+                    if (addresses.isNotEmpty)
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: addresses.length,
+                          itemBuilder: (context, index) {
+                            final address = addresses[index];
+                            final isSelected = selectedAddress?.address == address.addressId;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  selectedAddress = address;
+                                });
+                                setModalState(() {});
+                              },
+                              child: Container(
+                                margin: EdgeInsets.symmetric(vertical: 8.h),
+                                padding: EdgeInsets.all(12.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.pink : Colors.grey.shade300,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("${address.addressType ?? "Home"}",
+                                        style: customTextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                                    SizedBox(height: 4.h),
+                                    Text("${address.address}, ${address.area}, ${address.city} - ${address.pincode}",
+                                        style: customTextStyle(fontSize: 14.sp, color: Colors.black54)),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      Center(child: Text("No addresses found", style: customTextStyle(color: Colors.grey))),
+
+                    SizedBox(height: 16.h),
+
+                    // Confirm button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.pink,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, selectedAddress);
+                        },
+                        child: Text(
+                          "Use This Address",
+                          style: customTextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 8.h),
+
+                    // Edit Address Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.pink),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context); // close modal
+                          Navigator.pushNamed(context, '/addressDetails'); // navigate to edit address screen
+                        },
+                        child: Text(
+                          "Edit Addresses",
+                          style: customTextStyle(fontSize: 16.sp, color: Colors.pink, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }*/
+
+
+
+/// Opens modal to edit the address
+  /*Future<AddressInfo?> _showEditAddressModal(BuildContext context, AddressInfo initialAddress) async {
     final addressController = TextEditingController(text: initialAddress.address);
     final areaController = TextEditingController(text: initialAddress.area);
     final landmarkController = TextEditingController(text: initialAddress.landmark);
@@ -414,7 +741,6 @@ class AddressWidget extends StatelessWidget {
     final pinCodeController = TextEditingController(text: initialAddress.pinCode);
     final stateController = TextEditingController(text: initialAddress.state);
     bool isLoading = false;
-
     return await showModalBottomSheet<AddressInfo>(
       backgroundColor: Colors.white,
       context: context,
@@ -574,7 +900,7 @@ class AddressWidget extends StatelessWidget {
                           errorBorder: InputBorder.none),
                     ),
                   ),
-                  /*TextField(
+                  *//*TextField(
                 controller: postalController,
                 decoration: InputDecoration(
                   filled: true,
@@ -583,7 +909,7 @@ class AddressWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                       borderSide: BorderSide.none),
                 ),
-              ),*/
+              ),*//*
 
                   SizedBox(height: 20.h),
                   SizedBox(
@@ -813,7 +1139,7 @@ class AddressWidget extends StatelessWidget {
                       errorBorder: InputBorder.none),
                 ),
               ),
-              /*TextField(
+              *//*TextField(
                 controller: postalController,
                 decoration: InputDecoration(
                   filled: true,
@@ -822,7 +1148,7 @@ class AddressWidget extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                       borderSide: BorderSide.none),
                 ),
-              ),*/
+              ),*//*
 
               SizedBox(height: 20.h),
               SizedBox(
@@ -879,7 +1205,7 @@ class AddressWidget extends StatelessWidget {
         );
       },
     );
-  }
+  }*/
 }
 
 class ContactWidget extends StatelessWidget {

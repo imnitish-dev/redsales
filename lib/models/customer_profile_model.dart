@@ -9,7 +9,7 @@ class CustomerProfileModel {
   final String? referralCode;
   final String? referredBy;
   final CreatedAt? referredOn;
-  final Address? address;
+  final List<Address>? addresses; // <-- Now it's a list
   final List<String>? userType;
 
   CustomerProfileModel({
@@ -23,7 +23,7 @@ class CustomerProfileModel {
     this.referralCode,
     this.referredBy,
     this.referredOn,
-    this.address,
+    this.addresses,
     this.userType,
   });
 
@@ -43,7 +43,9 @@ class CustomerProfileModel {
       referralCode: json['referralCode'],
       referredBy: json['referredBy'],
       referredOn: json['referredOn'] != null ? CreatedAt.fromJson(json['referredOn']) : null,
-      address: json['address'] != null ? Address.fromJson(json['address']) : null,
+      addresses: (json['address'] as List<dynamic>? ?? [])
+          .map((e) => Address.fromJson(e))
+          .toList(), // <-- Parse list of addresses
       userType: (json['userType'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
@@ -53,7 +55,7 @@ class CustomerProfileModel {
 
 class CreatedAt {
   final int? timestamp;
-  final dynamic isoDate; // Can be String or int, so keep dynamic
+  final dynamic isoDate;
 
   CreatedAt({this.timestamp, this.isoDate});
 
@@ -127,26 +129,47 @@ class KycData {
 }
 
 class Address {
-  final String? storeName;
+  final String? id;
+  final String? addressId;
+  final CreatedAt? createdAt;
+  final String? status;
+  final String? customerId;
+  final String? addressType;
   final String? address;
+  final String? area;
+  final String? landmark;
+  final String? pincode;
   final String? city;
-  final String? pinCode;
   final String? state;
 
   Address({
-    this.storeName,
+    this.id,
+    this.addressId,
+    this.createdAt,
+    this.status,
+    this.customerId,
+    this.addressType,
     this.address,
+    this.area,
+    this.landmark,
+    this.pincode,
     this.city,
-    this.pinCode,
     this.state,
   });
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      storeName: json['storeName'],
+      id: json['_id'],
+      addressId: json['addressId'],
+      createdAt: json['createdAt'] != null ? CreatedAt.fromJson(json['createdAt']) : null,
+      status: json['status'],
+      customerId: json['customerId'],
+      addressType: json['addressType'],
       address: json['address'],
+      area: json['area'],
+      landmark: json['landmark'],
+      pincode: json['pincode'],
       city: json['city'],
-      pinCode: json['pinCode'],
       state: json['state'],
     );
   }

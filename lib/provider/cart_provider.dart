@@ -33,7 +33,7 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addProduct({
+  Future<bool> addProduct({
     required String productId,
     required int quantity,
 }) async {
@@ -51,14 +51,16 @@ class CartProvider extends ChangeNotifier {
         logInfo("Product Added To Cart : $productId");
         showCustomToast(msg: 'Product Updated!');
         loadCartData();
-        return;
+        return true;
       }else{
         logError('failed to add product to cart : $productId');
         showErrorToast(msg: 'Failed To Add to Cart');
+        return false;
       }
     } catch (e) {
       errorMessage = e.toString();
       status = ApiLoadingState.error;
+      return false;
     }
     notifyListeners();
   }

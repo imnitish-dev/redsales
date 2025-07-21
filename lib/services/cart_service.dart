@@ -40,6 +40,7 @@ class CartService {
 
       if (response.statusCode == 200) {
         final jsonBody = jsonDecode(response.body);
+        logInfo(jsonBody);
         if (jsonBody['success'] == 1) {
           return CartListModel.fromJson(jsonBody['data']);
         } else {

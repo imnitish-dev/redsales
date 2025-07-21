@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:twocliq/screens/cart_screen/payment_screen.dart';
 import 'package:twocliq/screens/cart_screen/widgets/cart_item_list_widget.dart';
@@ -59,6 +60,8 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
+
+
 
   Widget addressWidget() {
     return Container(
@@ -130,7 +133,8 @@ class _CartScreenState extends State<CartScreen> {
 
     final cartProvider = Provider.of<CartProvider>(context);
 
-    return Container(
+    return cartProvider.cartList!.cartProducts.isNotEmpty ?
+    Container(
       color: const Color(0xFFFDF7F2),
       child: Padding(
         padding: EdgeInsets.all(12.0.r),
@@ -246,6 +250,6 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
       ),
-    );
+    ) : customSizedBox();
   }
 }

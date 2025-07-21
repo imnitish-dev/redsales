@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:twocliq/helper/constants.dart';
 import 'package:twocliq/provider/cart_provider.dart';
@@ -65,6 +66,33 @@ class _CartItemListWidgetState extends State<CartItemListWidget> {
     });
   }
 
+  Widget emptyCartWidget() {
+    return Padding(
+      padding: EdgeInsets.all(15.r),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,  // Center vertically
+        children: [
+          Container(
+              decoration: const BoxDecoration(
+                color: Colors.redAccent,
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding:  EdgeInsets.all(12.r),
+                child: SvgPicture.asset('assets/svg/bag.svg', height: 40.r),
+              )),
+          SizedBox(height: 15.h),
+          Text(
+            "No Items In Cart",
+            style: customTextStyle(color: Colors.black, fontSize:18.sp),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
 
@@ -101,14 +129,7 @@ class _CartItemListWidgetState extends State<CartItemListWidget> {
 
             return provider.cartList!.cartProducts.isEmpty
                 ? Center(
-              child: Text(
-                "No items in cart",
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              child: emptyCartWidget(),
             )
                 : ListView.builder(
               padding: EdgeInsets.all(16.w),

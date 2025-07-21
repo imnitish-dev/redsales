@@ -4,14 +4,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:twocliq/provider/cart_provider.dart';
 import 'package:twocliq/provider/customer_profile_provider.dart';
+import 'package:twocliq/provider/orders_provider.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/order_history_screen.dart';
 import 'package:twocliq/services/product_service.dart';
 
+import '../../../helper/animatedPage.dart';
 import '../../../helper/constants.dart';
+import '../../../models/cart_list_model.dart';
+import '../../../models/customer_profile_model.dart';
 
 class CheckoutFooter extends StatefulWidget {
-
-
-   const CheckoutFooter({super.key});
+  Address? selectedAddress;
+  CheckoutFooter({super.key, required this.selectedAddress});
 
   @override
   State<CheckoutFooter> createState() => _CheckoutFooterState();
@@ -22,6 +26,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final customerProfileProvider = Provider.of<CustomerProfileProvider>(context);
+    final orderProvider = Provider.of<OrdersProvider>(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       color: Colors.white,
@@ -51,7 +56,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
                       ),
                     ),
                     TextSpan(
-                      text: cartProvider.cartList?.cartSummary?.totalAmount.toString()??"", // now using widget.total"
+                      text: cartProvider.cartList?.cartSummary?.totalAmount.toString() ?? "",
                       style: customTextStyle(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.normal,
@@ -84,15 +89,79 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
             width: 200.w,
             child: ElevatedButton(
               onPressed: () async {
-                print(customerProfileProvider.customerProfile?.address?.state);
-               /* bool isPushed = await ProductService.placeOrder(
-                    addressId: addressId,
+                //  print(customerProfileProvider.customerProfile?.address?.state);
+
+
+
+                final selectedAddress = widget.selectedAddress;
+
+                if(selectedAddress!=null) {
+                  List<CartProduct>? cartProducts = cartProvider.cartList?.cartProducts;
+
+                  List<Map<String, dynamic>>? products = cartProducts?.map((product) {
+                    return {
+                      "productId": product.productId ?? "",
+                      "quantity": product.quantity ?? 0,
+                    };
+                  }).toList();
+
+                  /*if(products==null){
+                    showErrorToast(msg: "something went wrong!");
+                    return;
+                  }
+
+                  bool isPushed = await ProductService.placeOrder(
+                      addressId: selectedAddress.addressId??"",
+                      products: products,
+                      itemAmount: cartProvider.cartList?.cartSummary.itemAmount,
+                      taxAmount: taxAmount,
+                      shippingAmount: shippingAmount,
+                      finalAmount: finalAmount,
+                      paymentMode: 'COD');
+                }*/
+
+                  if (products == null || products.isEmpty) {
+                    showErrorToast(msg: "No products in cart!");
+                    return;
+                  }
+
+                  if (selectedAddress?.addressId == null ||
+                      cartProvider.cartList?.cartSummary?.itemAmount == null ||
+                      cartProvider.cartList?.cartSummary?.taxAmount == null ||
+                      //cartProvider.cartList?.cartSummary?. == null ||
+                      cartProvider.cartList?.cartSummary?.totalAmount == null
+                  ) {
+                    showErrorToast(msg: "Something went wrong! Missing required details.");
+                    return;
+                  }
+
+                  bool isPushed = await ProductService.placeOrder(
+                    addressId: selectedAddress.addressId!,
                     products: products,
-                    itemAmount: itemAmount,
-                    taxAmount: taxAmount,
-                    shippingAmount: shippingAmount,
-                    finalAmount: finalAmount,
-                    paymentMode: 'COD');*/
+                    itemAmount: cartProvider.cartList!.cartSummary!.itemAmount!,
+                    taxAmount: cartProvider.cartList!.cartSummary!.taxAmount!,
+                    shippingAmount: 0,
+                    finalAmount: cartProvider.cartList!.cartSummary!.totalAmount!,
+                    paymentMode: 'COD',
+                  );
+
+                  if(isPushed){
+                    showCustomToast(msg: "order confirmed!");
+                    cartProvider.loadCartData();
+                    await orderProvider.loadOrders();
+                    Navigator.pop(context);
+                    Navigator.of(context).push(openAnimatedPage(
+                        OrderHistoryScreen()
+                    ));
+
+                  }else{
+                    showCustomToast(msg: "something went wrong!");
+                  }
+
+
+                }
+
+
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
@@ -114,7 +183,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
       builder: (context) {
         final cartProvider = Provider.of<CartProvider>(context);
         return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -148,7 +217,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
                 _buildSummaryRow("Item Total", "₹ ${cartProvider.cartList?.cartSummary?.itemAmount ?? ''}"),
                 _buildSummaryRow("Discount Amount", "₹ ${cartProvider.cartList?.cartSummary?.discountAmount ?? ''}"),
                 _buildSummaryRow("Tax Amount", "₹ ${cartProvider.cartList?.cartSummary?.taxAmount ?? ''}"),
-               // _buildSummaryRow("Wallet Deduction", "₹00.00"),
+                // _buildSummaryRow("Wallet Deduction", "₹00.00"),
                 //_buildSummaryRow("Delivery Tip", "Add Tip", isLink: true),
                 DottedLine(
                   dashColor: Colors.grey.withOpacity(0.4),
@@ -157,7 +226,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
                   lineThickness: 2,
                 ),
                 const SizedBox(height: 8),
-                _buildSummaryRow("To Pay",  "₹ ${cartProvider.cartList?.cartSummary?.totalAmount ?? ''}", isBold: true),
+                _buildSummaryRow("To Pay", "₹ ${cartProvider.cartList?.cartSummary?.totalAmount ?? ''}", isBold: true),
                 const SizedBox(height: 16),
               ],
             ),
@@ -167,8 +236,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
     );
   }
 
-  Widget _buildSummaryRow(String title, String value,
-      {bool isBold = false, bool isLink = false}) {
+  Widget _buildSummaryRow(String title, String value, {bool isBold = false, bool isLink = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(

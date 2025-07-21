@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:twocliq/provider/cart_provider.dart';
+import 'package:twocliq/screens/cart_screen/cart_screen.dart';
+import 'package:twocliq/screens/cart_screen/payment_screen.dart';
 import 'package:twocliq/screens/product_detail_screen/widgets/delivery_selector_widget.dart';
 import 'package:twocliq/screens/product_detail_screen/widgets/originInfoWidget.dart';
 import 'package:twocliq/screens/product_detail_screen/widgets/popular_items_widget.dart';
@@ -373,15 +376,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
 
   Widget addToCartWidget(){
-    return Container(
-      decoration: BoxDecoration(
-          color: Colors.redAccent,
-          border: Border.all(color: Colors.redAccent,width: 2),
-          borderRadius: const BorderRadius.all(Radius.circular(12))
-      ),
-      child: Padding(
-        padding:  EdgeInsets.only(left: 20.w,right: 20.w ,top: 8.h,bottom: 8.h),
-        child: Text('Add To Cart',style: customTextStyle(color: Colors.white,fontSize: 18.sp)),
+    final cartProvider = Provider.of<CartProvider>(context);
+    final detailProductScreenProvider = Provider.of<DetailedProductScreenProvider>(context);
+    return GestureDetector(
+      onTap: () async {
+        /*Navigator.of(context).push(openAnimatedPage(
+            PaymentScreen()
+        ));*/
+
+
+        bool isPushed = await cartProvider.addProduct(productId:  detailProductScreenProvider.currentProductDetail?.productId??"", quantity: 1);
+
+        if(isPushed){
+          await cartProvider.loadCartData();
+          showCustomToast(msg: "added to cart!");
+          Navigator.of(context).push(openAnimatedPage(
+              CartScreen()
+          ));
+        }else{
+          showErrorToast(msg: "failed to add..");
+        }
+
+
+
+
+      },
+      child: Container(
+        decoration: BoxDecoration(
+            color: Colors.redAccent,
+            border: Border.all(color: Colors.redAccent,width: 2),
+            borderRadius: const BorderRadius.all(Radius.circular(12))
+        ),
+        child: Padding(
+          padding:  EdgeInsets.only(left: 20.w,right: 20.w ,top: 8.h,bottom: 8.h),
+          child: Text('Add To Cart',style: customTextStyle(color: Colors.white,fontSize: 18.sp)),
+        ),
       ),
     );
   }

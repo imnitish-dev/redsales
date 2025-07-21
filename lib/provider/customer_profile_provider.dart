@@ -21,6 +21,7 @@ class CustomerProfileProvider extends ChangeNotifier {
       customerProfile = await CustomerService.fetchCustomerProfile();
       status = ApiLoadingState.success;
       logInfo("received profile : ${customerProfile?.customerDetails}");
+      logInfo("customer address : ${customerProfile?.addresses}");
     } catch (e) {
       errorMessage = e.toString();
       status = ApiLoadingState.error;
