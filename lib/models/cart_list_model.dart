@@ -1,7 +1,7 @@
 class CartListModel {
-  final List<CartProduct> cartProducts;
-  final CartSummary? cartSummary;
-  final List<Coupon> coupons;
+   List<CartProduct> cartProducts = [];
+   CartSummary? cartSummary;
+   List<Coupon> coupons = [];
 
   CartListModel({
     required this.cartProducts,

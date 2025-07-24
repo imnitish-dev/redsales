@@ -106,7 +106,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
 
 
-  Voucher? selectedVoucher;
+
   String selectedPaymentMethod = "COD";
 
   void updateAddress(Address newAddress) {
@@ -381,13 +381,7 @@ class ContactInfo {
   }
 }
 
-class Voucher {
-  final String code;
-  final String description;
-  final int discount;
 
-  Voucher({required this.code, required this.description, required this.discount});
-}
 
 class AddressWidget extends StatelessWidget {
   final Address? addressInfo;
@@ -468,7 +462,7 @@ class AddressWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
 
-                    customSizedBox(height: 40.h),
+                    customSizedBox(height: 20.h),
 
                     // Header
                     Row(
@@ -482,18 +476,62 @@ class AddressWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10.h),
+                    customSizedBox(height: 10.h),
 
                     // Address List
                     if (addresses.isNotEmpty)
                       Flexible(
-                        child: ListView.builder(
+                        child:
+                        ListView.builder(
                           physics: const BouncingScrollPhysics(),
                           shrinkWrap: true,
                           itemCount: addresses.length,
                           itemBuilder: (context, index) {
                             final address = addresses[index];
                             final isSelected = selectedAddress?.addressId == address.addressId;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  selectedAddress = address;
+                                });
+                              },
+                              child: Container(
+                                margin: EdgeInsets.symmetric(vertical: 8.h),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.pink : Colors.grey.shade300,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12.r), // Clip actual content
+                                  child: Container(
+                                    color: Colors.grey.shade50,
+                                    padding: EdgeInsets.all(12.w),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          address.addressType ?? "Home",
+                                          style: customTextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                                        ),
+                                        customSizedBox(height: 4.h),
+                                        Text(
+                                          "${address.address}, ${address.area}, ${address.city} - ${address.pincode}",
+                                          style: customTextStyle(fontSize: 14.sp, color: Colors.black54),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+
+
+
+
 
                             return GestureDetector(
                               onTap: () {
@@ -534,7 +572,7 @@ class AddressWidget extends StatelessWidget {
                     else
                       Center(child: Text("No addresses found", style: customTextStyle(color: Colors.grey))),
 
-                    SizedBox(height: 16.h),
+                    customSizedBox(height: 16.h),
 
                     // Confirm Button
                     SizedBox(
@@ -555,29 +593,8 @@ class AddressWidget extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: 8.h),
 
-                    // Edit Addresses Button
-                    /*SizedBox(
-                      width: double.infinity,
-                      height: 48.h,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.pink),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context); // close modal first
-                        //  Navigator.pushNamed(context, '/addressDetails'); // navigate to edit screen
-                        },
-                        child: Text(
-                          "Edit Addresses",
-                          style: customTextStyle(fontSize: 16.sp, color: Colors.pink, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),*/
-
-                    SizedBox(height: 20.h),
+                    customSizedBox(height: 28.h),
                   ],
                 ),
               ),
@@ -588,624 +605,6 @@ class AddressWidget extends StatelessWidget {
     );
   }
 
-
-
-/*  Future<Address?> _showEditAddressModal(BuildContext context) async {
-    final profileProvider = Provider.of<CustomerProfileProvider>(context, listen: false);
-    final addresses = profileProvider.customerProfile?.addresses ?? [];
-
-    Address? selectedAddress = addresses.isNotEmpty ? addresses.first : null;
-
-    return await showModalBottomSheet<Address>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                  left: 16,
-                  right: 16,
-                  top: 20,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Select Address", style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10.h),
-
-                    // Address List
-                    if (addresses.isNotEmpty)
-                      Flexible(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: addresses.length,
-                          itemBuilder: (context, index) {
-                            final address = addresses[index];
-                            final isSelected = selectedAddress?.address == address.addressId;
-
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() {
-                                  selectedAddress = address;
-                                });
-                                setModalState(() {});
-                              },
-                              child: Container(
-                                margin: EdgeInsets.symmetric(vertical: 8.h),
-                                padding: EdgeInsets.all(12.w),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: isSelected ? Colors.pink : Colors.grey.shade300,
-                                    width: isSelected ? 2 : 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("${address.addressType ?? "Home"}",
-                                        style: customTextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                                    SizedBox(height: 4.h),
-                                    Text("${address.address}, ${address.area}, ${address.city} - ${address.pincode}",
-                                        style: customTextStyle(fontSize: 14.sp, color: Colors.black54)),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      )
-                    else
-                      Center(child: Text("No addresses found", style: customTextStyle(color: Colors.grey))),
-
-                    SizedBox(height: 16.h),
-
-                    // Confirm button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48.h,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pink,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context, selectedAddress);
-                        },
-                        child: Text(
-                          "Use This Address",
-                          style: customTextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8.h),
-
-                    // Edit Address Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48.h,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.pink),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context); // close modal
-                          Navigator.pushNamed(context, '/addressDetails'); // navigate to edit address screen
-                        },
-                        child: Text(
-                          "Edit Addresses",
-                          style: customTextStyle(fontSize: 16.sp, color: Colors.pink, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20.h),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }*/
-
-
-
-/// Opens modal to edit the address
-  /*Future<AddressInfo?> _showEditAddressModal(BuildContext context, AddressInfo initialAddress) async {
-    final addressController = TextEditingController(text: initialAddress.address);
-    final areaController = TextEditingController(text: initialAddress.area);
-    final landmarkController = TextEditingController(text: initialAddress.landmark);
-    final cityController = TextEditingController(text: initialAddress.city);
-    final pinCodeController = TextEditingController(text: initialAddress.pinCode);
-    final stateController = TextEditingController(text: initialAddress.state);
-    bool isLoading = false;
-    return await showModalBottomSheet<AddressInfo>(
-      backgroundColor: Colors.white,
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Shipping Address", style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  customSizedBox(height: 20.h),
-                  DottedLine(
-                    dashColor: Colors.grey.withOpacity(0.4),
-                    dashLength: 5,
-                    dashGapLength: 3,
-                    lineThickness: 2,
-                  ),
-
-                  customSizedBox(height: 20.h),
-
-                  // Country (read-only)
-                  Text("Country", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-                  customSizedBox(height: 4.h),
-                  Text("India", style: customTextStyle(color: Colors.grey, fontSize: 14.sp)),
-
-                  customSizedBox(height: 12.h),
-                  Text("Address", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-                  customSizedBox(height: 5.h),
-                  Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(18.r),
-                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: TextField(
-                      controller: addressController,
-                      decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none),
-                    ),
-                  ),
-                  customSizedBox(height: 18.h),
-
-
-
-                  customSizedBox(height: 12.h),
-                  Text("Area", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-                  customSizedBox(height: 5.h),
-                  Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(18.r),
-                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: TextField(
-                      controller: areaController,
-                      decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none),
-                    ),
-                  ),
-                  customSizedBox(height: 18.h),
-
-                  customSizedBox(height: 12.h),
-                  Text("Landmark", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-                  customSizedBox(height: 5.h),
-                  Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(18.r),
-                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: TextField(
-                      controller: landmarkController,
-                      decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none),
-                    ),
-                  ),
-                  customSizedBox(height: 18.h),
-
-
-
-
-
-                  Text("Town / City", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-                  customSizedBox(height: 5.h),
-                  Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade100.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(18.r),
-                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: TextField(
-                      controller: cityController,
-                      decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none),
-                    ),
-                  ),
-
-                  customSizedBox(height: 12.h),
-                  Text("Postcode", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-                  customSizedBox(height: 5.h),
-                  Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                        color: Colors.grey.shade100.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(18.r),
-                        border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: TextField(
-                      controller: pinCodeController,
-                      decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none),
-                    ),
-                  ),
-                  *//*TextField(
-                controller: postalController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide.none),
-                ),
-              ),*//*
-
-                  SizedBox(height: 20.h),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48.h,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pink,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () async {
-
-                        if(addressController.text.isNotEmpty && areaController.text.isNotEmpty && pinCodeController.text.isNotEmpty && cityController.text.isNotEmpty){
-
-                          logInfo('addressType : "Home"');
-                          logInfo('address : ${addressController.text}');
-                          logInfo('area : ${areaController.text}');
-                          logInfo('landmark : ${landmarkController.text}');
-                          logInfo('pincode : ${pinCodeController.text}');
-                          logInfo('city : ${cityController.text}');
-                          logInfo('state : "Maharashtra"');
-
-
-
-                          isLoading = await CustomerService.addCustomerAddress(
-                            addressType: "Home",
-                            address: addressController.text,
-                            area: areaController.text,
-                            landmark: landmarkController.text.isEmpty ? " " : landmarkController.text,
-                            pincode: pinCodeController.text,
-                            city: cityController.text,
-                            state: "Maharashtra",
-                          );
-
-
-
-                          if(isLoading){
-                            showCustomToast(msg: "address updated!");
-                            Navigator.pop(
-                                context,
-                                initialAddress.copyWith(
-                                    city: cityController.text,
-                                    address: addressController.text,
-                                    state: "Maharashtra",
-                                    addressType: 'Home',
-                                    area: areaController.text,
-                                    landmark: landmarkController.text.isEmpty ? " " : landmarkController.text,
-                                    pinCode: pinCodeController.text));
-                          }else{
-                            showCustomToast(msg: 'failed to update address');
-                          }
-
-                        }else{
-                          showCustomToast(msg: "please fill all fields");
-                        }
-
-
-                      },
-                      child: isLoading ? SizedBox(width: 5.r,height: 5.r,child: CircularProgressIndicator(color: Colors.white),) : Text("Save Changes",
-                          style: customTextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-
-    return await showModalBottomSheet<AddressInfo>(
-      backgroundColor: Colors.white,
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Shipping Address", style: customTextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              customSizedBox(height: 20.h),
-              DottedLine(
-                dashColor: Colors.grey.withOpacity(0.4),
-                dashLength: 5,
-                dashGapLength: 3,
-                lineThickness: 2,
-              ),
-
-              customSizedBox(height: 20.h),
-
-              // Country (read-only)
-              Text("Country", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-              customSizedBox(height: 4.h),
-              Text("India", style: customTextStyle(color: Colors.grey, fontSize: 14.sp)),
-
-              customSizedBox(height: 12.h),
-              Text("Address", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-              customSizedBox(height: 5.h),
-              Container(
-                alignment: Alignment.bottomLeft,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                child: TextField(
-                  controller: addressController,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none),
-                ),
-              ),
-              customSizedBox(height: 18.h),
-
-
-
-              customSizedBox(height: 12.h),
-              Text("Area", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-              customSizedBox(height: 5.h),
-              Container(
-                alignment: Alignment.bottomLeft,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                child: TextField(
-                  controller: areaController,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none),
-                ),
-              ),
-              customSizedBox(height: 18.h),
-
-              customSizedBox(height: 12.h),
-              Text("Landmark", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-              customSizedBox(height: 5.h),
-              Container(
-                alignment: Alignment.bottomLeft,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                child: TextField(
-                  controller: landmarkController,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none),
-                ),
-              ),
-              customSizedBox(height: 18.h),
-
-
-
-
-
-              Text("Town / City", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-              customSizedBox(height: 5.h),
-              Container(
-                alignment: Alignment.bottomLeft,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade100.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                child: TextField(
-                  controller: cityController,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none),
-                ),
-              ),
-
-              customSizedBox(height: 12.h),
-              Text("Postcode", style: customTextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp)),
-              customSizedBox(height: 5.h),
-              Container(
-                alignment: Alignment.bottomLeft,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade100.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(18.r),
-                    border: Border.all(color: Colors.black54.withOpacity(0.2), width: 0.5)),
-                padding: EdgeInsets.symmetric(horizontal: 8.w),
-                child: TextField(
-                  controller: pinCodeController,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none),
-                ),
-              ),
-              *//*TextField(
-                controller: postalController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide.none),
-                ),
-              ),*//*
-
-              SizedBox(height: 20.h),
-              SizedBox(
-                width: double.infinity,
-                height: 48.h,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () async {
-
-                    if(addressController.text.isEmpty || areaController.text.isEmpty || pinCodeController.text.isEmpty || cityController.text.isEmpty){
-
-
-                       isLoading = await CustomerService.addCustomerAddress(
-                          addressType: "Home",
-                          address: addressController.text,
-                          area: areaController.text,
-                          landmark: landmarkController.text,
-                          pincode: pinCodeController.text,
-                          city: cityController.text,
-                          state: "Maharashtra");
-
-
-
-                       if(isLoading){
-                         showCustomToast(msg: "address updated!");
-                         Navigator.pop(
-                             context,
-                             initialAddress.copyWith(
-                                 city: cityController.text,
-                                 address: addressController.text,
-                                 state: "Maharashtra",
-                                 addressType: 'Home',
-                                 area: areaController.text,
-                                 landmark: landmarkController.text,
-                                 pinCode: pinCodeController.text));
-                       }else{
-                         showCustomToast(msg: 'failed to update address');
-                       }
-
-                    }
-
-
-                  },
-                  child: const Text("Save Changes",
-                      style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              SizedBox(height: 20.h),
-            ],
-          ),
-        );
-      },
-    );
-  }*/
 }
 
 class ContactWidget extends StatelessWidget {
@@ -1220,6 +619,7 @@ class ContactWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = Provider.of<CustomerProfileProvider>(context);
     return Padding(
       padding: EdgeInsets.only(left: 12.w, right: 12.w),
       child: Container(
@@ -1234,19 +634,19 @@ class ContactWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Contact Information", style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4.h),
-                  Text(contactInfo.phone, style: TextStyle(fontWeight: FontWeight.normal)),
-                  SizedBox(height: 4.h),
-                  Text(contactInfo.email, style: TextStyle(fontSize: 13.sp)),
+                  Text("Contact Information", style: customTextStyle(fontWeight: FontWeight.bold,fontSize: 15.sp)),
+                  customSizedBox(height: 4.h),
+                  Text(profileProvider.customerProfile?.customerDetails?.contactNo??"", style: customTextStyle(fontWeight: FontWeight.normal,fontSize: 14.sp)),
+                  customSizedBox(height: 4.h),
+                  Text(profileProvider.customerProfile?.customerDetails?.emailId??"", style: customTextStyle(fontSize: 14.sp)),
                 ],
               ),
             ),
             IconButton(
               icon: const Icon(Icons.edit, color: Colors.pink),
               onPressed: () {
-                // Simulate edit
-                onEdit(contactInfo.copyWith(phone: "+91-99999-00000"));
+               /* onEdit(contactInfo.copyWith(phone: "+91-99999-00000"));*/
+
               },
             )
           ],
@@ -1255,7 +655,6 @@ class ContactWidget extends StatelessWidget {
     );
   }
 }
-
 
 
 class PaymentMethodWidget extends StatelessWidget {
@@ -1336,5 +735,3 @@ class PaymentMethodWidget extends StatelessWidget {
     );
   }
 }
-
-

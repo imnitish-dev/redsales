@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:twocliq/helper/constants.dart';
 import '../helper/apirequest.dart';
-import '../models/cart_list_model.dart';
-import '../models/customer_profile_model.dart';
+import '../models/order_model.dart';
+import '../models/wishlist_model.dart';
 
-class CustomerService {
+class WishlistService {
   static const String _hostUrlLOCAL = "https://two-cliq.imnitish.dev/redsales/app";
   static const String _hostUrl = "https://redsales.projectx38.cloud/app-apis/redsales/app";
 
-  static Future<CustomerProfileModel> fetchCustomerProfile() async {
-    final url = Uri.parse("$_hostUrlLOCAL/customer/profile");
+  static Future<List<WishlistItem>> fetchWishlist() async {
+    final url = Uri.parse("$_hostUrlLOCAL/wishlist/list");
 
     try {
       String deviceId = await getDeviceId();
@@ -24,15 +25,19 @@ class CustomerService {
         ...packageInfo,
       };
 
-      final response = await http.post(url, headers: headers).timeout(
+      final body = jsonEncode({});
+
+      final response = await http.post(url, headers: headers, body: body).timeout(
         const Duration(seconds: 10),
         onTimeout: () => throw Exception("Request timed out."),
       );
 
       if (response.statusCode == 200) {
         final jsonBody = jsonDecode(response.body);
+
         if (jsonBody['success'] == 1) {
-          return CustomerProfileModel.fromJson(jsonBody['data']);
+          final List<dynamic> data = jsonBody['data']['wishlistItems'] ?? [];
+          return data.map((e) => WishlistItem.fromJson(e)).toList();
         } else {
           throw Exception(jsonBody['message'] ?? "API error");
         }
@@ -40,20 +45,12 @@ class CustomerService {
         throw Exception("Server error: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Failed to fetch customer profile: $e");
+      throw Exception("Failed to fetch wishlist: $e");
     }
   }
 
-  static Future<bool> addCustomerAddress({
-    required String addressType,
-    required String address,
-    required String area,
-    required String landmark,
-    required String pincode,
-    required String city,
-    required String state,
-  }) async {
-    final url = Uri.parse("$_hostUrlLOCAL/address/add");
+  static Future<bool> deleteWishlistItemUsingWishlistID({required String wishlistId}) async {
+    final url = Uri.parse("$_hostUrlLOCAL/wishlist/remove");
 
     try {
       String deviceId = await getDeviceId();
@@ -69,13 +66,7 @@ class CustomerService {
       };
 
       final body = jsonEncode({
-        "addressType": addressType,
-        "address": address,
-        "area": area,
-        "landmark": landmark,
-        "pincode": pincode,
-        "city": city,
-        "state": state,
+        "wishlistId": wishlistId,
       });
 
       final response = await http.post(url, headers: headers, body: body).timeout(
@@ -86,29 +77,20 @@ class CustomerService {
       if (response.statusCode == 200) {
         final jsonBody = jsonDecode(response.body);
         if (jsonBody['success'] == 1) {
-          return true; // Address successfully added
+          return true; // Successfully deleted
         } else {
-          throw Exception(jsonBody['message'] ?? "API error");
+          throw Exception(jsonBody['message'] ?? "Failed to delete wishlist item");
         }
       } else {
         throw Exception("Server error: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Failed to add customer address: $e");
+      throw Exception("Failed to delete wishlist item: $e");
     }
   }
 
-  static Future<bool> updateCustomerAddress({
-    required String addressId,
-    required String addressType,
-    required String address,
-    required String area,
-    required String landmark,
-    required String pincode,
-    required String city,
-    required String state,
-  }) async {
-    final url = Uri.parse("$_hostUrlLOCAL/address/update");
+  static Future<bool> deleteWishlistItemUsingProductID({required String wishlistId}) async {
+    final url = Uri.parse("$_hostUrlLOCAL/wishlist/remove");
 
     try {
       String deviceId = await getDeviceId();
@@ -124,14 +106,7 @@ class CustomerService {
       };
 
       final body = jsonEncode({
-        "addressId": addressId,
-        "addressType": addressType,
-        "address": address,
-        "area": area,
-        "landmark": landmark,
-        "pincode": pincode,
-        "city": city,
-        "state": state,
+        "productId": wishlistId,
       });
 
       final response = await http.post(url, headers: headers, body: body).timeout(
@@ -142,25 +117,22 @@ class CustomerService {
       if (response.statusCode == 200) {
         final jsonBody = jsonDecode(response.body);
         if (jsonBody['success'] == 1) {
-          return true; // Address successfully updated
+          return true; // Successfully deleted
         } else {
-          throw Exception(jsonBody['message'] ?? "API error");
+          throw Exception(jsonBody['message'] ?? "Failed to delete wishlist item");
         }
       } else {
         throw Exception("Server error: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Failed to update customer address: $e");
+      throw Exception("Failed to delete wishlist item: $e");
     }
   }
 
-  static Future<bool> deleteCustomerAddress({
-    required String addressId,
-  }) async {
-    final url = Uri.parse("$_hostUrlLOCAL/address/delete");
+  static Future<bool> addProductToWishlist({required String productId}) async {
+    final url = Uri.parse("$_hostUrlLOCAL/wishlist/add");
 
     try {
-
       String deviceId = await getDeviceId();
       String loginToken = await getLoginToken();
       Map<String, String> packageInfo = await getPackageInfo();
@@ -174,7 +146,7 @@ class CustomerService {
       };
 
       final body = jsonEncode({
-        "addressId": addressId,
+        "productId": productId,
       });
 
       final response = await http.post(url, headers: headers, body: body).timeout(
@@ -184,20 +156,19 @@ class CustomerService {
 
       if (response.statusCode == 200) {
         final jsonBody = jsonDecode(response.body);
+
         if (jsonBody['success'] == 1) {
-          return true;
+          return true; // Product successfully added to wishlist
         } else {
-          throw Exception(jsonBody['message'] ?? "Failed to delete address");
+          throw Exception(jsonBody['message'] ?? "Failed to add product to wishlist");
         }
       } else {
         throw Exception("Server error: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Failed to delete customer address: $e");
+      throw Exception("Failed to add product to wishlist: $e");
     }
   }
-
-
 
 
 }

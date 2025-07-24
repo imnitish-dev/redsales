@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:twocliq/helper/constants.dart';
 
-import '../screens/sign_in_screen.dart';
+import '../screens/auth_screens/sign_in_screen.dart';
 
 
 class UserSharedPref {
@@ -39,9 +40,15 @@ class UserSharedPref {
   }
 
   /// Clear user session (for logout)
-  static Future<void> clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userDetailsKey);
+  static Future<bool> clearSession() async {
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokenKey);
+      await prefs.remove(_userDetailsKey);
+      return true;
+    }catch(eww){
+      logError(eww.toString());
+      return false;
+    }
   }
 }

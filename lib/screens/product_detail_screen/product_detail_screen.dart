@@ -15,12 +15,14 @@ import 'package:twocliq/screens/product_detail_screen/widgets/review_widget.dart
 import 'package:twocliq/screens/product_detail_screen/widgets/size_selector_widget.dart';
 import 'package:twocliq/screens/product_detail_screen/widgets/specifications_widget.dart';
 import 'package:twocliq/screens/product_detail_screen/widgets/you_might_like_widget.dart';
+import 'package:twocliq/services/wishlist_service.dart';
 
 import '../../helper/animatedPage.dart';
 import '../../helper/constants.dart';
 import '../../models/product_detail_model.dart';
 import '../../provider/detailed_product_screen_provider.dart';
 import '../../provider/home_provider.dart';
+import '../../provider/wishlist_provider.dart';
 import '../widgets/shimmer_widget.dart';
 import 'all_reviews_screen.dart';
 
@@ -37,17 +39,16 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-
   String? selectedSizeID;
   String? selectedDeliveryOption;
 
-  void callData(){
+  bool isLikeUnlikeLoading = false;
+
+  void callData() {
     Future.microtask(() {
       Provider.of<DetailedProductScreenProvider>(context, listen: false).loadProductDetail(productId: widget.productId);
     });
   }
-
-
 
   final options = [
     DeliveryOption(title: "Standard Delivery", time: "5–7 days", price: "₹699"),
@@ -72,121 +73,172 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark));
+    SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark));
     callData();
+  }
+
+  Widget likeUnlikeWidget(String productId) {
+    final wishlistProvider = Provider.of<WishlistProvider>(context);
+
+    // Check if the current product is in wishlist
+    final isInWishlist = wishlistProvider.wishlist?.any(
+          (item) => item.productId == productId,
+        ) ??
+        false;
+
+    return IconButton(
+      icon: Icon(
+        isInWishlist ? Icons.favorite : Icons.favorite_border,
+        color: isInWishlist ? Colors.pink : Colors.grey,
+      ),
+      onPressed: () async {
+        setState(() {
+          isLikeUnlikeLoading = true;
+        });
+
+        if (isInWishlist) {
+          // If it exists, remove from wishlist
+          bool isRemovedFromWishlist = await WishlistService.deleteWishlistItemUsingProductID(wishlistId: productId);
+          if (isRemovedFromWishlist) {
+            wishlistProvider.refreshOrders();
+            showCustomToast(msg: 'Removed From Wishlist');
+          }
+        } else {
+          // If it doesn't exist, add to wishlist
+          bool isAddedToWishlist = await WishlistService.addProductToWishlist(productId: productId);
+          if (isAddedToWishlist) {
+            wishlistProvider.refreshOrders();
+            showCustomToast(msg: 'Added To Wishlist');
+          }
+        }
+
+        setState(() {
+          isLikeUnlikeLoading = false;
+        });
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child:
-        Consumer<DetailedProductScreenProvider>(
-          builder: (context, provider, _) {
-            switch (provider.status) {
-              case ApiLoadingState.loading:
-                return buildLoadingShimmer();
+      body: SafeArea(child: Consumer<DetailedProductScreenProvider>(
+        builder: (context, provider, _) {
+          switch (provider.status) {
+            case ApiLoadingState.loading:
+              return buildLoadingShimmer();
 
-              case ApiLoadingState.error:
-                return Center(
-                  child: Text(
-                    provider.errorMessage ?? "Failed to load",
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                );
+            case ApiLoadingState.error:
+              return Center(
+                child: Text(
+                  provider.errorMessage ?? "Failed to load",
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
 
-              case ApiLoadingState.success:
-                return Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding:  EdgeInsets.only(top: 9.h,left: 10.w),
-                              child: Padding(
-                                padding:  EdgeInsets.all(8.0.r),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        IconButton(onPressed: (){
-                                          Navigator.pop(context);
-                                        }, icon: Icon(FeatherIcons.chevronLeft,size: 30.r,color: Colors.black.withOpacity(0.4),)),
-                                        SizedBox(
-                                          width: MediaQuery.of(context).size.width/2,
-                                          child: Text(
-
-                                            provider.currentProductDetail?.productDetails?.productTitle??'',
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 2,
-                                            //"Granactive Retinoid 5%",
-                                            style: customTextStyle(
-                                              fontSize: 18.sp,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black.withOpacity(0.6),
-                                            ),
+            case ApiLoadingState.success:
+              return Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 9.h, left: 10.w),
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0.r),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      IconButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          icon: Icon(
+                                            FeatherIcons.chevronLeft,
+                                            size: 30.r,
+                                            color: Colors.black.withOpacity(0.4),
+                                          )),
+                                      SizedBox(
+                                        width: MediaQuery.of(context).size.width / 2,
+                                        child: Text(
+                                          provider.currentProductDetail?.productDetails?.productTitle ?? '',
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 2,
+                                          //"Granactive Retinoid 5%",
+                                          style: customTextStyle(
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black.withOpacity(0.6),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  isLikeUnlikeLoading
+                                      ? Padding(
+                                          padding: EdgeInsets.only(right: 15.w),
+                                          child: SizedBox(
+                                            height: 20.r,
+                                            width: 20.r,
+                                            child: const CircularProgressIndicator(color: Colors.pink, strokeWidth: 2),
                                           ),
                                         )
-                                      ],
-                                    ),
-                                    IconButton(onPressed: (){}, icon: Icon(Icons.favorite_outlined,color: Colors.redAccent))
-                                  ],
-                                ),
-                              ),
-                            ),
-                             ImagesCarousel(
-                              images: provider.currentProductDetail?.images??[]
-                              /*[
-                                "https://imgmediagumlet.lbb.in/media/2024/09/66e023d74093fc4320cb024a_1725965271288.jpg",
-                              ],*/
-                            ),
-                            Padding(
-                              padding:  EdgeInsets.only(left: 25.w,top: 15.h),
-                              child: Row(
-                                children: [
-                                  priceAndDescWidget(productDetails: provider.currentProductDetail?.priceDetails),
+                                      : likeUnlikeWidget(widget.productId)
+                                  //IconButton(onPressed: (){}, icon: Icon(Icons.favorite_outlined,color: Colors.redAccent))
                                 ],
                               ),
                             ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
-                              child: DottedLine(
-                                dashColor: Colors.grey.withOpacity(0.25),
-                                dashLength: 5,
-                                dashGapLength: 3,
-                                lineThickness: 2,
+                          ),
+                          ImagesCarousel(images: provider.currentProductDetail?.images ?? []
+                              /*[
+                                "https://imgmediagumlet.lbb.in/media/2024/09/66e023d74093fc4320cb024a_1725965271288.jpg",
+                              ],*/
                               ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25.w, top: 15.h),
+                            child: Row(
+                              children: [
+                                priceAndDescWidget(productDetails: provider.currentProductDetail?.priceDetails),
+                              ],
                             ),
-
-                            Padding(
-                              padding:  EdgeInsets.only(left: 25.w),
-                              child: SizeSelector(
-                                prices: provider.currentProductDetail!.priceDetails?.customPrice,
-                                onSelected: (size) {
-                                  logInfo("Selected size: $size");
-                                  selectedSizeID = size;
-                                },
-                              ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
+                            child: DottedLine(
+                              dashColor: Colors.grey.withOpacity(0.25),
+                              dashLength: 5,
+                              dashGapLength: 3,
+                              lineThickness: 2,
                             ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
-                              child: DottedLine(
-                                dashColor: Colors.grey.withOpacity(0.25),
-                                dashLength: 5,
-                                dashGapLength: 3,
-                                lineThickness: 2,
-                              ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25.w),
+                            child: SizeSelector(
+                              prices: provider.currentProductDetail!.priceDetails?.customPrice,
+                              onSelected: (size) {
+                                logInfo("Selected size: $size");
+                                selectedSizeID = size;
+                              },
                             ),
-
-                            SpecificationsWidget(productSpecification: provider.currentProductDetail!.specifications),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
+                            child: DottedLine(
+                              dashColor: Colors.grey.withOpacity(0.25),
+                              dashLength: 5,
+                              dashGapLength: 3,
+                              lineThickness: 2,
+                            ),
+                          ),
+                          SpecificationsWidget(productSpecification: provider.currentProductDetail!.specifications),
 
                           /*  Padding(
                               padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
@@ -198,15 +250,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                             ),
 */
-                           /* Padding(
+                          /* Padding(
                               padding:  EdgeInsets.only(left: 25.w),
                               child: const OriginInfo(value: "EU"),
                             ),*/
 
-
-
-
-                            /*Padding(
+                          /*Padding(
                               padding:  EdgeInsets.only(left: 15.w ,right: 15.w),
                               child: DeliverySelector(
                                 options: options,
@@ -217,130 +266,127 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                             ),*/
 
-                            Padding(
-                              padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
-                              child: DottedLine(
-                                dashColor: Colors.grey.withOpacity(0.25),
-                                dashLength: 5,
-                                dashGapLength: 3,
-                                lineThickness: 2,
-                              ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 25.h, bottom: 20.h),
+                            child: DottedLine(
+                              dashColor: Colors.grey.withOpacity(0.25),
+                              dashLength: 5,
+                              dashGapLength: 3,
+                              lineThickness: 2,
                             ),
-
-                            Padding(
-                              padding:  EdgeInsets.only(left: 5.w,right: 5.w),
-                              child: RatingReviewsWidget(
-                                averageRating: 4.0,
-                                reviews: reviews,
-                                onViewAll: () {
-                                  logInfo("Navigate to all reviews");
-                                  Navigator.of(context).push(openAnimatedPage(
-                                      AllReviewsScreen()
-                                  ));
-                                },
-                              ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.w, right: 5.w),
+                            child: RatingReviewsWidget(
+                              averageRating: 4.0,
+                              reviews: reviews,
+                              onViewAll: () {
+                                logInfo("Navigate to all reviews");
+                                Navigator.of(context).push(openAnimatedPage(AllReviewsScreen()));
+                              },
                             ),
-
-                            Padding(
-                              padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 10.h, bottom: 10.h),
-                              child: DottedLine(
-                                dashColor: Colors.grey.withOpacity(0.25),
-                                dashLength: 5,
-                                dashGapLength: 3,
-                                lineThickness: 2,
-                              ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 10.h, bottom: 10.h),
+                            child: DottedLine(
+                              dashColor: Colors.grey.withOpacity(0.25),
+                              dashLength: 5,
+                              dashGapLength: 3,
+                              lineThickness: 2,
                             ),
-
-                            Padding(
-                              padding:  EdgeInsets.only(left: 5.w,right: 5.w),
-                              child: MostPopularSection(
-                                items: [
-                                  PopularItem(
-                                    imageUrl: "https://www.rollingstone.com/wp-content/uploads/2024/08/Best-Skincare-Brands-for-Men-APSE-Featured.png?w=900&h=600&crop=1",
-                                    likes: 1780,
-                                    label: "New",
-                                  ),
-                                  PopularItem(
-                                    imageUrl: "https://www.rollingstone.com/wp-content/uploads/2024/08/Best-Skincare-Brands-for-Men-APSE-Featured.png?w=900&h=600&crop=1",
-                                    likes: 1780,
-                                    label: "Sale",
-                                  ),
-                                  PopularItem(
-                                    imageUrl: "https://www.rollingstone.com/wp-content/uploads/2024/08/Best-Skincare-Brands-for-Men-APSE-Featured.png?w=900&h=600&crop=1",
-                                    likes: 1780,
-                                    label: "Hot",
-                                  ),
-                                ],
-                                onViewAll: () {
-                                  // Navigate to full list
-                                },
-                              ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.w, right: 5.w),
+                            child: MostPopularSection(
+                              items: [
+                                PopularItem(
+                                  imageUrl:
+                                      "https://www.rollingstone.com/wp-content/uploads/2024/08/Best-Skincare-Brands-for-Men-APSE-Featured.png?w=900&h=600&crop=1",
+                                  likes: 1780,
+                                  label: "New",
+                                ),
+                                PopularItem(
+                                  imageUrl:
+                                      "https://www.rollingstone.com/wp-content/uploads/2024/08/Best-Skincare-Brands-for-Men-APSE-Featured.png?w=900&h=600&crop=1",
+                                  likes: 1780,
+                                  label: "Sale",
+                                ),
+                                PopularItem(
+                                  imageUrl:
+                                      "https://www.rollingstone.com/wp-content/uploads/2024/08/Best-Skincare-Brands-for-Men-APSE-Featured.png?w=900&h=600&crop=1",
+                                  likes: 1780,
+                                  label: "Hot",
+                                ),
+                              ],
+                              onViewAll: () {
+                                // Navigate to full list
+                              },
                             ),
-
-                            Padding(
-                              padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 10.h, bottom: 10.h),
-                              child: DottedLine(
-                                dashColor: Colors.grey.withOpacity(0.25),
-                                dashLength: 5,
-                                dashGapLength: 3,
-                                lineThickness: 2,
-                              ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15.w, right: 15.w, top: 10.h, bottom: 10.h),
+                            child: DottedLine(
+                              dashColor: Colors.grey.withOpacity(0.25),
+                              dashLength: 5,
+                              dashGapLength: 3,
+                              lineThickness: 2,
                             ),
-
-                            Padding(
-                              padding:  EdgeInsets.only(left: 5.w,right: 5.w),
-                              child: YouMightLikeSection(
-                                products: [
-                                  ProductModel(
-                                    imageUrl: "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
-                                    description: "Lorem ipsum dolor sit amet consectetur amet...",
-                                    price: "₹699",
-                                  ),
-                                  ProductModel(
-                                    imageUrl: "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
-                                    description: "Lorem ipsum dolor sit amet consectetur amet...",
-                                    price: "₹699",
-                                  ),
-                                  ProductModel(
-                                    imageUrl: "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
-                                    description: "Lorem ipsum dolor sit amet consectetur amet...",
-                                    price: "₹699",
-                                  ),
-                                  ProductModel(
-                                    imageUrl: "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
-                                    description: "Lorem ipsum dolor sit amet consectetur amet...",
-                                    price: "₹699",
-                                  ),
-                                ],
-                              ),
-                            )
-
-
-
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding:  EdgeInsets.all(12.0.r),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          favProductWidget(),
-                          Row(
-                            children: [
-                              customSizedBox(width: 10.w),
-                              addToCartWidget(),
-                              customSizedBox(width: 10.w),
-                             // buyNowWidget(),
-                              customSizedBox(width: 15.w),
-                            ],
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.w, right: 5.w),
+                            child: YouMightLikeSection(
+                              products: [
+                                ProductModel(
+                                  imageUrl:
+                                      "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
+                                  description: "Lorem ipsum dolor sit amet consectetur amet...",
+                                  price: "₹699",
+                                ),
+                                ProductModel(
+                                  imageUrl:
+                                      "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
+                                  description: "Lorem ipsum dolor sit amet consectetur amet...",
+                                  price: "₹699",
+                                ),
+                                ProductModel(
+                                  imageUrl:
+                                      "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
+                                  description: "Lorem ipsum dolor sit amet consectetur amet...",
+                                  price: "₹699",
+                                ),
+                                ProductModel(
+                                  imageUrl:
+                                      "https://ziedasclinic.com/wp-content/uploads/2024/08/luxury-skin-care-in-dubai.jpg",
+                                  description: "Lorem ipsum dolor sit amet consectetur amet...",
+                                  price: "₹699",
+                                ),
+                              ],
+                            ),
                           )
                         ],
                       ),
-                    )
-                  ],
-                );
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(12.0.r),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        favProductWidget(),
+                        Row(
+                          children: [
+                            customSizedBox(width: 10.w),
+                            addToCartWidget(),
+                            customSizedBox(width: 10.w),
+                            // buyNowWidget(),
+                            customSizedBox(width: 15.w),
+                          ],
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              );
 
             /* return ListView.builder(
              // padding: const EdgeInsets.all(16),
@@ -367,15 +413,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 );
               },
             );*/
-            }
-          },
-        )
-      ),
+          }
+        },
+      )),
     );
   }
 
-
-  Widget addToCartWidget(){
+  Widget addToCartWidget() {
     final cartProvider = Provider.of<CartProvider>(context);
     final detailProductScreenProvider = Provider.of<DetailedProductScreenProvider>(context);
     return GestureDetector(
@@ -384,32 +428,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             PaymentScreen()
         ));*/
 
+        bool isPushed = await cartProvider.addProduct(
+            productId: detailProductScreenProvider.currentProductDetail?.productId ?? "", quantity: 1);
 
-        bool isPushed = await cartProvider.addProduct(productId:  detailProductScreenProvider.currentProductDetail?.productId??"", quantity: 1);
-
-        if(isPushed){
+        if (isPushed) {
           await cartProvider.loadCartData();
           showCustomToast(msg: "added to cart!");
-          Navigator.of(context).push(openAnimatedPage(
-              CartScreen()
-          ));
-        }else{
+          Navigator.pop(context);
+          Navigator.of(context).push(openAnimatedPage(CartScreen()));
+        } else {
           showErrorToast(msg: "failed to add..");
         }
-
-
-
-
       },
       child: Container(
         decoration: BoxDecoration(
             color: Colors.redAccent,
-            border: Border.all(color: Colors.redAccent,width: 2),
-            borderRadius: const BorderRadius.all(Radius.circular(12))
-        ),
+            border: Border.all(color: Colors.redAccent, width: 2),
+            borderRadius: const BorderRadius.all(Radius.circular(12))),
         child: Padding(
-          padding:  EdgeInsets.only(left: 20.w,right: 20.w ,top: 8.h,bottom: 8.h),
-          child: Text('Add To Cart',style: customTextStyle(color: Colors.white,fontSize: 18.sp)),
+          padding: EdgeInsets.only(left: 20.w, right: 20.w, top: 8.h, bottom: 8.h),
+          child: Text('Add To Cart', style: customTextStyle(color: Colors.white, fontSize: 18.sp)),
         ),
       ),
     );
@@ -429,13 +467,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }*/
 
-
-
-
-
-
-
-  Widget priceAndDescWidget({required DetailProductPriceDetails? productDetails}){
+  Widget priceAndDescWidget({required DetailProductPriceDetails? productDetails}) {
     return Flexible(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,42 +479,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 TextSpan(
                     text: "₹ ",
-                    style: customTextStyle(fontSize: 20.sp,fontWeight: FontWeight.bold ,color: Colors.redAccent))
-                ,
+                    style: customTextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: Colors.redAccent)),
                 TextSpan(
-                  text: productDetails?.sellingPrice==null? "": productDetails?.sellingPrice.toString(),
-                    style: customTextStyle(fontSize: 20.sp,fontWeight: FontWeight.bold ,color: Colors.redAccent)
-                ),
+                    text: productDetails?.sellingPrice == null ? "" : productDetails?.sellingPrice.toString(),
+                    style: customTextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: Colors.redAccent)),
               ],
             ),
           ),
           customSizedBox(height: 10.h),
-          Text('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam arcu mauris, scelerisque eu mauris id, pretium pulvinar sapien. pretium pulvinar sapien.',
-          style: customTextStyle(color: Colors.black54)
-          )
+          Text(
+              'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam arcu mauris, scelerisque eu mauris id, pretium pulvinar sapien. pretium pulvinar sapien.',
+              style: customTextStyle(color: Colors.black54))
         ],
       ),
     );
   }
 
-  Widget favProductWidget(){
+  Widget favProductWidget() {
     bool isFav = false;
-    return IconButton(onPressed: (){
-      setState(() {
-        isFav = !isFav;
-      });
-    }, icon: isFav ?  Icon(Icons.favorite_outlined,color: Colors.redAccent,size: 35.r) : Icon(Icons.favorite_outline,color: Colors.black,size: 35.r,));
+    return IconButton(
+        onPressed: () {
+          setState(() {
+            isFav = !isFav;
+          });
+        },
+        icon: isFav
+            ? Icon(Icons.favorite_outlined, color: Colors.redAccent, size: 35.r)
+            : Icon(
+                Icons.favorite_outline,
+                color: Colors.black,
+                size: 35.r,
+              ));
   }
-
 }
-
-
-
-
-
-
-
-
-
-
-

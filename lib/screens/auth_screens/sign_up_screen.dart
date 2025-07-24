@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:twocliq/helper/address_types_list.dart';
+import 'package:twocliq/screens/auth_screens/widgets/address_type_selector.dart';
+import 'package:twocliq/screens/auth_screens/widgets/state_selector_widget.dart';
 
-import '../helper/constants.dart';
-import '../services/auth_service.dart';
+import '../../helper/constants.dart';
+import '../../helper/indian_states_list.dart';
+import '../../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -45,6 +49,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool isLoading = false;
   String? selectedState;
+  String? selectedAddress;
 
   @override
   Widget build(BuildContext context) {
@@ -235,6 +240,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           });
                         },
                       ),
+
+                      customSizedBox(height: 35.h),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5.w),
+                        child: Row(
+                          children: [
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: customTextStyle(fontSize: 14, color: Colors.black54),
+                                children: [
+                                  TextSpan(
+                                      text: "Address Type ",
+                                      style: customTextStyle(
+                                          fontSize: 16.sp, fontWeight: FontWeight.normal, color: Colors.black)),
+                                  TextSpan(
+                                      text: "*",
+                                      style: customTextStyle(
+                                          fontSize: 16.sp, fontWeight: FontWeight.normal, color: Colors.redAccent))
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      customSizedBox(height: 05.h),
+                      AddressTypeSelector(
+                        selectedAddress: selectedAddress,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedAddress = value;
+                          });
+                        },
+                      ),
+
                       customSizedBox(height: 15.h),
                     ],
                   ),
@@ -245,6 +285,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
               padding: EdgeInsets.all(8.0.r),
               child: GestureDetector(
                 onTap: () async {
+
+                  bool checkNet = await checkNetConnectivity();
+                  if(!checkNet){
+                    showErrorToast(msg: "internet connection not found!");
+                    return;
+                  }
+
                   if (isLoading) {
                     showCustomToast(msg: "please wait..");
                     return;
@@ -330,64 +377,3 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 }
 
-class StateSelector extends StatelessWidget {
-  final String? selectedState;
-  final ValueChanged<String?> onChanged;
-
-  const StateSelector({super.key, required this.selectedState, required this.onChanged});
-
-  static const List<String> indianStates = [
-    'Andhra Pradesh',
-    'Arunachal Pradesh',
-    'Assam',
-    'Bihar',
-    'Chhattisgarh',
-    'Goa',
-    'Gujarat',
-    'Haryana',
-    'Himachal Pradesh',
-    'Jharkhand',
-    'Karnataka',
-    'Kerala',
-    'Madhya Pradesh',
-    'Maharashtra',
-    'Manipur',
-    'Meghalaya',
-    'Mizoram',
-    'Nagaland',
-    'Odisha',
-    'Punjab',
-    'Rajasthan',
-    'Sikkim',
-    'Tamil Nadu',
-    'Telangana',
-    'Tripura',
-    'Uttar Pradesh',
-    'Uttarakhand',
-    'West Bengal',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      value: selectedState,
-      items: indianStates.map((state) => DropdownMenuItem(value: state, child: Text(state))).toList(),
-      onChanged: onChanged,
-      dropdownColor: Colors.white,
-      style: customTextStyle(color: Colors.black, fontSize: 14.sp),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.6), width: 0.8),
-        ),
-        /*focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.r),
-          borderSide: const BorderSide(color: Colors.pink, width: 1.2),
-        ),*/
-      ),
-    );
-  }
-}

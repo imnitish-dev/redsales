@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:twocliq/helper/constants.dart';
-import 'package:twocliq/models/cart_list_model.dart';
 import 'package:twocliq/models/order_model.dart';
-import 'package:twocliq/services/cart_service.dart';
-
-import '../models/home_screen/home_screen_model.dart';
-import '../services/home_service.dart';
 import '../services/orders_service.dart';
 import 'home_provider.dart';
-
-
-
 
 class OrdersProvider extends ChangeNotifier {
   ApiLoadingState status = ApiLoadingState.loading;

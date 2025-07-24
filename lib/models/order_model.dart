@@ -50,6 +50,54 @@ class OrderModel {
       buyerDeliveryConfirmation: json['buyerDeliveryConfirmation'],
     );
   }
+
+  String? getLatestLogType(List<LogEntry>? logs) {
+    if (logs == null || logs.isEmpty) return null;
+
+    // Sort by timestamp (latest first)
+    logs.sort((a, b) {
+      final tsA = a.logDate?.timestamp ?? 0;
+      final tsB = b.logDate?.timestamp ?? 0;
+      return tsB.compareTo(tsA);
+    });
+
+    final logType = logs.first.logType ?? "";
+
+    // Map logType to readable string
+    switch (logType) {
+      case "ORDER_PLACED":
+        return "Order Placed";
+      case "ORDER_MARKED_RECEIVED":
+        return "Order Received";
+      default:
+        return logType.isNotEmpty ? logType : null; // Fallback to original if unknown
+    }
+  }
+
+  int? getLatestLogStep(List<LogEntry>? logs) {
+    if (logs == null || logs.isEmpty) return null;
+
+    // Sort by timestamp (latest first)
+    logs.sort((a, b) {
+      final tsA = a.logDate?.timestamp ?? 0;
+      final tsB = b.logDate?.timestamp ?? 0;
+      return tsB.compareTo(tsA);
+    });
+
+    final logType = logs.first.logType ?? "";
+
+    // Map logType to step number
+    switch (logType) {
+      case "ORDER_PLACED":
+        return 1;
+      case "ORDER_MARKED_RECEIVED":
+        return 2;
+      default:
+        return null; // unknown log type, no step
+    }
+  }
+
+
 }
 
 class OrderDate {
@@ -227,3 +275,5 @@ class PaymentSummary {
     );
   }
 }
+
+

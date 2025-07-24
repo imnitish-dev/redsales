@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twocliq/helper/user_shared_pref.dart';
-import 'package:twocliq/screens/register_screen.dart';
-import 'package:twocliq/screens/sign_up_screen.dart';
+import 'package:twocliq/screens/auth_screens/register_screen.dart';
+import 'package:twocliq/screens/auth_screens/sign_up_screen.dart';
 
-import '../helper/apirequest.dart';
-import '../helper/constants.dart';
-import 'main_home_screen.dart';
+import '../../helper/apirequest.dart';
+import '../../helper/constants.dart';
+import '../main_home_screen.dart';
 
 
 class SignInScreen extends StatefulWidget {
@@ -60,6 +60,13 @@ class _SignInScreenState extends State<SignInScreen> {
 
 
   Future<void> _submit(BuildContext context) async {
+
+    bool checkNet = await checkNetConnectivity();
+    if(!checkNet){
+      showErrorToast(msg: "internet connection not found!");
+      return;
+    }
+
     final userNameError = _validateUserName(_userNameController.text);
     final passwordError = _validatePassword(_passwordController.text);
 
@@ -91,6 +98,8 @@ class _SignInScreenState extends State<SignInScreen> {
             loginResponse.data!.loginToken,
             loginResponse.data!.loggedIn.userDetails,
           );
+
+
 
           if (!mounted) return;
           Navigator.pushAndRemoveUntil(
@@ -173,6 +182,13 @@ class _SignInScreenState extends State<SignInScreen> {
                 return;
               }
               try {
+
+                bool checkNet = await checkNetConnectivity();
+                if(!checkNet){
+                  showErrorToast(msg: "internet connection not found!");
+                  return;
+                }
+
                 final response = await makeApiCall(
                   endpoint: '/customer/forgot-password',
                   method: 'POST',

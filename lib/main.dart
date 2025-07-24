@@ -7,7 +7,8 @@ import 'package:twocliq/provider/customer_profile_provider.dart';
 import 'package:twocliq/provider/detailed_product_screen_provider.dart';
 import 'package:twocliq/provider/home_provider.dart';
 import 'package:twocliq/provider/orders_provider.dart';
-import 'package:twocliq/screens/splash_screen.dart';
+import 'package:twocliq/provider/wishlist_provider.dart';
+import 'package:twocliq/screens/auth_screens/splash_screen.dart';
 import 'package:twocliq/theme.dart';
 
 Future<void> main() async {
@@ -24,7 +25,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => DetailedProductScreenProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => CustomerProfileProvider()),
-        ChangeNotifierProvider(create: (_) => OrdersProvider())
+        ChangeNotifierProvider(create: (_) => OrdersProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider())
       ],
       child: const MyApp(),
     ),

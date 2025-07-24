@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:twocliq/helper/constants.dart';
+import 'package:twocliq/helper/user_shared_pref.dart';
+import 'package:twocliq/screens/auth_screens/sign_in_screen.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/address_screen/address_list_screen.dart';
 import 'package:twocliq/screens/profile_screen/other_profile_screens/my_profile_screen.dart';
-import 'package:twocliq/screens/profile_screen/other_profile_screens/order_history_screen.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/order_history_screens/order_history_screen.dart';
 import 'package:twocliq/screens/profile_screen/other_profile_screens/change_password_screen.dart';
 import 'package:twocliq/screens/profile_screen/other_profile_screens/wallet_screen.dart';
 import 'package:twocliq/screens/wishlist_screen.dart';
-
 import '../../helper/animatedPage.dart';
-import '../product_detail_screen/write_review_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,18 +26,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-
             customSizedBox(height: 20.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   "Profile",
-                  style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                  style: customTextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            SizedBox(height: 20.h),
+            customSizedBox(height: 20.h),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -47,9 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       imagePath: "assets/icons/profile_icons/my_profile_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
                       onTap: () {
-                        Navigator.of(context).push(openAnimatedPage(
-                            MyProfileScreen()
-                        ));
+                        Navigator.of(context).push(openAnimatedPage(const MyProfileScreen()));
                       },
                     ),
                     ReusableCard(
@@ -57,9 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       imagePath: "assets/icons/profile_icons/wishlist_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
                       onTap: () {
-                        Navigator.of(context).push(openAnimatedPage(
-                            WishlistScreen()
-                        ));
+                        Navigator.of(context).push(openAnimatedPage(const WishlistScreen()));
                       },
                     ),
                     ReusableCard(
@@ -67,9 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       imagePath: "assets/icons/profile_icons/order_history_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
                       onTap: () {
-                        Navigator.of(context).push(openAnimatedPage(
-                            OrderHistoryScreen()
-                        ));
+                        Navigator.of(context).push(openAnimatedPage(const OrderHistoryScreen()));
                       },
                     ),
                     ReusableCard(
@@ -77,9 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       imagePath: "assets/icons/profile_icons/wallet_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
                       onTap: () {
-                        Navigator.of(context).push(openAnimatedPage(
-                            WalletScreen()
-                        ));
+                        Navigator.of(context).push(openAnimatedPage(const WalletScreen()));
                       },
                     ),
                     ReusableCard(
@@ -111,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       imagePath: "assets/icons/profile_icons/address_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
                       onTap: () {
-                        print("Profile card clicked!");
+                        Navigator.of(context).push(openAnimatedPage(const AddressListScreen()));
                       },
                     ),
                     ReusableCard(
@@ -119,9 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       imagePath: "assets/icons/profile_icons/password_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
                       onTap: () {
-                        Navigator.of(context).push(openAnimatedPage(
-                            ChangePasswordScreen()
-                        ));
+                        Navigator.of(context).push(openAnimatedPage(const ChangePasswordScreen()));
                       },
                     ),
                     ReusableCard(
@@ -152,9 +142,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: "Legal",
                       imagePath: "assets/icons/profile_icons/legal_icon.png",
                       trailingIcon: Icons.arrow_forward_ios,
-                      onTap: () {
-                        print("Profile card clicked!");
-                      },
+                      onTap: () async {
+                        bool checkNet = await checkNetConnectivity();
+                        if(!checkNet){
+                          showErrorToast(msg: "internet connection not found!");
+                          return;
+                        }
+                      }
                     ),
                     ReusableCard(
                       title: "Delete Account",
@@ -165,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     Padding(
-                      padding:  EdgeInsets.all(12.r),
+                      padding: EdgeInsets.all(12.r),
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -173,12 +167,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             showDialog(
                               context: context,
                               barrierDismissible: false,
-                              builder: (context) => DeleteAccountOverlay(
-                                onCancel: (){
+                              builder: (context) => LogoutOverlay(
+                                onCancel: () {
                                   Navigator.pop(context);
                                 },
-                                onDelete: (){
+                                onLogout: () async {
                                   Navigator.pop(context);
+                                  bool isLoggedOut = await UserSharedPref.clearSession();
+                                  if(isLoggedOut){
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const SignInScreen()),
+                                          (route) => false,
+                                    );
+                                  }
                                 },
                               ),
                             );
@@ -192,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Text(
                             "Logout",
-                            style: TextStyle(
+                            style: customTextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -205,7 +207,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
           ],
         ),
       ),
@@ -223,7 +224,7 @@ class ReusableCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.imagePath,
-    this.trailingIcon = Icons.arrow_forward_ios, // default
+    this.trailingIcon = Icons.arrow_forward_ios,
     required this.onTap,
   });
 
@@ -242,22 +243,14 @@ class ReusableCard extends StatelessWidget {
               color: Colors.black.withOpacity(0.05),
               spreadRadius: 1,
               blurRadius: 8,
-              offset: const Offset(0, 3), // soft shadow
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
           children: [
-            // Avatar
-           /* CircleAvatar(
-              radius: 24.r,
-              backgroundImage: AssetImage(imagePath),
-              backgroundColor: Colors.grey.shade100,
-            ),*/
-            Image.asset(imagePath,width: 40.r,height: 40.r),
+            Image.asset(imagePath, width: 40.r, height: 40.r),
             customSizedBox(width: 12.w),
-
-            // Title
             Expanded(
               child: Text(
                 title,
@@ -267,9 +260,7 @@ class ReusableCard extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Trailing Icon
-            Icon(trailingIcon, size: 18.sp, color: Colors.black54),
+            Icon(trailingIcon, size: 18.r, color: Colors.black54),
           ],
         ),
       ),
@@ -277,20 +268,20 @@ class ReusableCard extends StatelessWidget {
   }
 }
 
-class DeleteAccountOverlay extends StatelessWidget {
+class LogoutOverlay extends StatelessWidget {
   final VoidCallback onCancel;
-  final VoidCallback onDelete;
+  final VoidCallback onLogout;
 
-  const DeleteAccountOverlay({
+  const LogoutOverlay({
     super.key,
     required this.onCancel,
-    required this.onDelete,
+    required this.onLogout,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.7), // Dimmed overlay background
+      backgroundColor: Colors.black.withOpacity(0.7),
       body: Center(
         child: Stack(
           clipBehavior: Clip.none,
@@ -313,32 +304,20 @@ class DeleteAccountOverlay extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(height: 50.h), // Space for circle icon
+                  customSizedBox(height: 62.h),
 
                   /// Main Title
                   Text(
-                    "You are going to delete\nyour account",
+                    "Are you sure you want to sign out?",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: customTextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
                   ),
 
-                  SizedBox(height: 8.h),
-
-                  /// Subtext
-                  Text(
-                    "You won't be able to restore your data",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-
-                  SizedBox(height: 24.h),
+                  customSizedBox(height: 32.h),
 
                   /// Action Buttons
                   Row(
@@ -353,22 +332,20 @@ class DeleteAccountOverlay extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                           ),
-                          child: const Text("Cancel",
-                              style: TextStyle(color: Colors.white)),
+                          child: Text("Cancel", style: customTextStyle(color: Colors.white, fontSize: 17.sp)),
                         ),
                       ),
-                      SizedBox(width: 16.w),
+                      customSizedBox(width: 16.w),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: onDelete,
+                          onPressed: onLogout,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.pink,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                           ),
-                          child: const Text("Delete",
-                              style: TextStyle(color: Colors.white)),
+                          child: Text("Logout", style: customTextStyle(color: Colors.white, fontSize: 17.sp)),
                         ),
                       ),
                     ],
@@ -379,7 +356,7 @@ class DeleteAccountOverlay extends StatelessWidget {
 
             /// Top Circle Icon (User with Minus)
             Positioned(
-              top: -60.r,
+              top: -60.h,
               left: 0,
               right: 0,
               child: Center(
@@ -405,10 +382,10 @@ class DeleteAccountOverlay extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Colors.pink,
                       ),
-                      child: const Icon(
-                        Icons.person_remove, // Delete-like icon
+                      child: Icon(
+                        Icons.person_remove,
                         color: Colors.white,
-                        size: 32,
+                        size: 32.r,
                       ),
                     ),
                   ),

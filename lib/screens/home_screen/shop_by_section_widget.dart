@@ -179,7 +179,7 @@ class ShopBySectionWidget2 extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -191,7 +191,7 @@ class ShopBySectionWidget2 extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withOpacity(0.8),
               ),
             ),
           ),
@@ -205,8 +205,8 @@ class ShopBySectionWidget2 extends StatelessWidget {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 0.h,
-              crossAxisSpacing: 12.w,
-              childAspectRatio: 0.7, // Adjust for spacing
+              crossAxisSpacing: 6.w,
+              childAspectRatio: 0.9, // Adjust for spacing
             ),
             itemBuilder: (context, index) {
               final item = shopItems[index];
@@ -230,7 +230,7 @@ class ShopBySectionWidget2 extends StatelessWidget {
                       ),
                     ),
 
-                    customSizedBox(height: 2.h),
+                   // customSizedBox(height: 2.h),
 
                     /// Label
                     Text(
@@ -238,7 +238,7 @@ class ShopBySectionWidget2 extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: Colors.black87,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,

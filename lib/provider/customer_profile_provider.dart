@@ -13,7 +13,7 @@ class CustomerProfileProvider extends ChangeNotifier {
   CustomerProfileModel? customerProfile;
   String? errorMessage;
 
-  Future<void> loadProfileData() async {
+  Future<bool> loadProfileData() async {
     status = ApiLoadingState.loading;
     notifyListeners();
 
@@ -22,12 +22,16 @@ class CustomerProfileProvider extends ChangeNotifier {
       status = ApiLoadingState.success;
       logInfo("received profile : ${customerProfile?.customerDetails}");
       logInfo("customer address : ${customerProfile?.addresses}");
+      return true;
     } catch (e) {
       errorMessage = e.toString();
       status = ApiLoadingState.error;
       logError('failed to load profile data : $errorMessage');
+      return false;
+    }finally{
+      notifyListeners();
     }
 
-    notifyListeners();
+
   }
 }

@@ -103,4 +103,44 @@ class CartService {
   }
 
 
+
+  static Future<bool> clearCart({required String cartId}) async {
+    final url = Uri.parse("$_hostUrlLOCAL/cart/delete");
+
+    try {
+      String deviceId = await getDeviceId();
+      String loginToken = await getLoginToken();
+      Map<String, String> packageInfo = await getPackageInfo();
+
+      Map<String, String> headers = {
+        'device-id': deviceId,
+        'login-token': loginToken,
+        'source': 'CUSTOMER_APP',
+        'content-type': 'application/json',
+        ...packageInfo,
+      };
+
+      final body = jsonEncode({"cartId": cartId});
+
+      final response = await http.post(url, headers: headers, body: body).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception("Request timed out."),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = jsonDecode(response.body);
+        if (jsonBody['success'] == 1) {
+          return true; // Cart cleared successfully
+        } else {
+          throw Exception(jsonBody['message'] ?? "API error");
+        }
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Failed to clear cart: $e");
+    }
+  }
+
+
 }

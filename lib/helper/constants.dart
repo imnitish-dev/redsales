@@ -257,6 +257,7 @@ class AppTextField extends StatelessWidget {
                 return null;
               },
               style: customTextStyle(color: Colors.black),
+
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: customTextStyle(
@@ -281,11 +282,11 @@ class AppTextField extends StatelessWidget {
                 customTextStyle(color: Colors.redAccent, fontSize: 15),
                 focusedBorder: OutlineInputBorder(
                   borderSide: const BorderSide(
-                      color: Colors.black12, width: 1.0),
+                      color: Colors.black12, width: 0.8),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey, width: 0.5),
+                  borderSide: const BorderSide(color: Colors.black12, width: 0.8),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ),

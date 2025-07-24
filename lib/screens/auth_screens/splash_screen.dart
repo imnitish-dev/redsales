@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:twocliq/screens/sign_in_screen.dart';
+import 'package:twocliq/screens/auth_screens/sign_in_screen.dart';
 
-import '../helper/apirequest.dart';
-import '../helper/constants.dart';
-import 'main_home_screen.dart';
+import '../../helper/apirequest.dart';
+import '../../helper/constants.dart';
+import '../main_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);

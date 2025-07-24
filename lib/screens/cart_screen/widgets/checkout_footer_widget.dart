@@ -5,7 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:twocliq/provider/cart_provider.dart';
 import 'package:twocliq/provider/customer_profile_provider.dart';
 import 'package:twocliq/provider/orders_provider.dart';
-import 'package:twocliq/screens/profile_screen/other_profile_screens/order_history_screen.dart';
+import 'package:twocliq/screens/cart_screen/confirmation_page.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/order_history_screens/order_history_screen.dart';
 import 'package:twocliq/services/product_service.dart';
 
 import '../../../helper/animatedPage.dart';
@@ -151,7 +152,7 @@ class _CheckoutFooterState extends State<CheckoutFooter> {
                     await orderProvider.loadOrders();
                     Navigator.pop(context);
                     Navigator.of(context).push(openAnimatedPage(
-                        OrderHistoryScreen()
+                       const Confirmation()
                     ));
 
                   }else{

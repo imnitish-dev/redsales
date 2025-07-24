@@ -7,15 +7,10 @@ import '../models/home_screen/home_screen_model.dart';
 import '../services/home_service.dart';
 import 'home_provider.dart';
 
-
-
-
 class CartProvider extends ChangeNotifier {
   ApiLoadingState status = ApiLoadingState.loading;
   CartListModel? cartList;
   String? errorMessage;
-
-
 
   Future<void> loadCartData({String? couponCode}) async {
     status = ApiLoadingState.loading;
@@ -36,23 +31,21 @@ class CartProvider extends ChangeNotifier {
   Future<bool> addProduct({
     required String productId,
     required int quantity,
-}) async {
-
+  }) async {
     status = ApiLoadingState.loading;
     notifyListeners();
 
     try {
-
       logInfo('productID : $productId');
 
       bool isDataPushed = await CartService.addProductToCart(productId: productId, quantity: quantity);
-      if(isDataPushed){
+      if (isDataPushed) {
         status = ApiLoadingState.success;
         logInfo("Product Added To Cart : $productId");
         showCustomToast(msg: 'Product Updated!');
         loadCartData();
         return true;
-      }else{
+      } else {
         logError('failed to add product to cart : $productId');
         showErrorToast(msg: 'Failed To Add to Cart');
         return false;
@@ -65,5 +58,8 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
+  Future<void> setCartDataManually({required CartListModel latestCartData}) async {
+    cartList = latestCartData;
+    notifyListeners();
+  }
 }

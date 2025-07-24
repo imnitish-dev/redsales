@@ -1,169 +1,247 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:twocliq/helper/constants.dart';
+import 'package:twocliq/provider/cart_provider.dart';
+import 'package:twocliq/provider/wishlist_provider.dart';
+import 'package:twocliq/services/cart_service.dart';
+import 'package:twocliq/services/wishlist_service.dart';
+import '../../../helper/animatedPage.dart';
+import '../../../models/cart_list_model.dart';
+import '../../../models/wishlist_model.dart';
+import '../../../provider/home_provider.dart';
+import '../../product_detail_screen/product_detail_screen.dart';
 
-class WishlistItem {
-  final String imageUrl;
-  final String description;
-  final String price;
-  final String size;
-
-  WishlistItem({
-    required this.imageUrl,
-    required this.description,
-    required this.price,
-    required this.size,
-  });
-}
-
-class FromWishlistWidget extends StatelessWidget {
+class FromWishlistWidget extends StatefulWidget {
   const FromWishlistWidget({super.key});
 
   @override
+  State<FromWishlistWidget> createState() => _FromWishlistWidgetState();
+}
+
+class _FromWishlistWidgetState extends State<FromWishlistWidget> {
+  bool isLoading = false;
+
+  @override
   Widget build(BuildContext context) {
-    // --- Sample Data ---
-    final List<WishlistItem> wishlistItems = [
-      WishlistItem(
-        imageUrl: "https://picsum.photos/200/301",
-        description: "Lorem ipsum dolor sit amet consectetur.",
-        price: "₹699",
-        size: "20 ml",
-      ),
-      WishlistItem(
-        imageUrl: "https://picsum.photos/200/302",
-        description: "Lorem ipsum dolor sit amet consectetur.",
-        price: "₹699",
-        size: "20 ml",
-      ),
-    ];
+    return Consumer<WishlistProvider>(
+      builder: (context, provider, _) {
+        switch (provider.status) {
+          case ApiLoadingState.loading:
+            return customSizedBox();
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 15.r,
+                  width: 15.r,
+                  child: Padding(
+                    padding: EdgeInsets.all(13.r),
+                    child: const CircularProgressIndicator(
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                )
+              ],
+            );
 
-    return Padding(
-      padding:  EdgeInsets.all(17.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// Title
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.w),
-            child: Text(
-              "From Your Wishlist",
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black.withOpacity(0.8),
+          case ApiLoadingState.error:
+            return customSizedBox();
+            return Center(
+              child: Text(
+                provider.errorMessage ?? "Failed to load",
+                style: const TextStyle(color: Colors.red),
               ),
-            ),
-          ),
-          SizedBox(height: 12.h),
+            );
 
-          /// Wishlist Items
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: wishlistItems.length,
-            itemBuilder: (context, index) {
-              final item = wishlistItems[index];
-              return Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: Row(
+          case ApiLoadingState.success:
+            return provider.wishlist!.isEmpty
+                ? customSizedBox()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 26.w),
+                        child: Text(
+                          "From Your Wishlist",
+                          style: customTextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      customSizedBox(height: 12.h),
+                      ListView.builder(
+                        padding: EdgeInsets.all(16.w),
+                        itemCount: provider.wishlist!.length,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final item = provider.wishlist![index];
+                          return wishlistWidget(currentWishlist: item);
+                        },
+                      ),
+                    ],
+                  );
+        }
+      },
+    );
+  }
+
+  Widget wishlistWidget({required WishlistItem currentWishlist}) {
+    final cartProvider = Provider.of<CartProvider>(context);
+    final wishListProvider = Provider.of<WishlistProvider>(context);
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: GestureDetector(
+        onTap: () {
+          if (currentWishlist.productId != null) {
+            Navigator.of(context).push(openAnimatedPage(ProductDetailScreen(productId: currentWishlist.productId!)));
+          }
+        },
+        child: Container(
+          color: Colors.transparent,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// Product Image + Delete Button
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
+                child: Image.network(
+                  currentWishlist.productImage ?? "",
+                  width: 120.r,
+                  height: 120.r,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 120.r,
+                    height: 120.r,
+                    color: Colors.grey.shade200,
+                    child: Icon(Icons.broken_image, size: 40.r, color: Colors.grey),
+                  ),
+                ),
+              ),
+              customSizedBox(width: 12.w),
+
+              /// Description + Price + Size + Add to Cart
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// Product Image + Delete Button
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12.r),
-                          child: Image.network(
-                            item.imageUrl,
-                            width: 120.w,
-                            height: 120.w,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 120.w,
-                              height: 120.w,
-                              color: Colors.grey.shade200,
-                              child: const Icon(Icons.broken_image, size: 40, color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 8.h,
-                          left: 8.w,
-                          child: Container(
-                            width: 40.w,
-                            height: 40.w,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                            child: const Icon(Icons.delete, color: Colors.red, size: 22),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      currentWishlist.productTitle ?? "",
+                      style: customTextStyle(
+                        fontSize: 15.sp,
+                        color: Colors.black,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(width: 12.w),
-
-                    /// Description + Price + Size + Add to Cart
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    customSizedBox(height: 6.h),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
                         children: [
-                          Text(
-                            item.description,
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black.withOpacity(0.7),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 6.h),
-                          Text(
-                            item.price,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.pink,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                                decoration: BoxDecoration(
-                                  color: Colors.pink.shade50,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: Text(
-                                  item.size,
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-                              Container(
-                                width: 36.w,
-                                height: 36.w,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.pink.shade50,
-                                ),
-                                child: const Icon(Icons.add_shopping_cart, color: Colors.pink),
-                              ),
-                            ],
-                          ),
+                          TextSpan(
+                              text: "₹ ",
+                              style: customTextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: Colors.pink)),
+                          TextSpan(
+                              text: currentWishlist.priceDetails?.sellingPrice == null
+                                  ? ""
+                                  : currentWishlist.priceDetails!.sellingPrice.toString(),
+                              style: customTextStyle(fontSize: 17.sp, fontWeight: FontWeight.w500, color: Colors.pink)),
                         ],
                       ),
                     ),
+                    customSizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        const Spacer(),
+                        Container(
+                          width: 36.r,
+                          height: 36.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.pink.shade50,
+                          ),
+                          child: IconButton(
+                              onPressed: () async {
+                                if (currentWishlist.wishlistId != null) {
+                                  bool isRemovedFromWishlist = await WishlistService.deleteWishlistItemUsingWishlistID(
+                                      wishlistId: currentWishlist.wishlistId!);
+                                  if (isRemovedFromWishlist) {
+                                    var tempWishlist = await WishlistService.fetchWishlist();
+                                    wishListProvider.setWishlistManually(newWishlist: tempWishlist);
+                                    showCustomToast(msg: 'Deleted product from wishlist');
+                                  } else {
+                                    showErrorToast(msg: 'failed to delete item from wishlist');
+                                  }
+                                } else {
+                                  showErrorToast(msg: 'failed to delete item from wishlist');
+                                }
+                              },
+                              icon: Icon(FeatherIcons.trash, color: Colors.pink, size: 20.r)),
+                        ),
+                        customSizedBox(width: 10.w),
+                        Container(
+                          width: 36.r,
+                          height: 36.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.pink.shade50,
+                          ),
+                          child: IconButton(
+                              onPressed: () async {
+                                logInfo("started to add item to cart");
+                                if (currentWishlist.productId != null) {
+                                  logInfo("productID : ${currentWishlist.productId}");
+
+                                  int currentQty = 0;
+                                  logInfo("old qty :$currentQty");
+                                  CartProduct? sameItemFromCart = cartProvider.cartList?.cartProducts
+                                      .firstWhereOrNull((element) => element.productId == currentWishlist.productId);
+
+                                  if (sameItemFromCart != null && sameItemFromCart.quantity != null) {
+                                    logInfo("found same item in cart already..");
+                                    currentQty = sameItemFromCart.quantity!;
+                                  }
+
+                                  currentQty = currentQty + 1;
+
+                                  logInfo("new qty :$currentQty");
+
+                                  bool isAddedToCart = await CartService.addProductToCart(
+                                      productId: currentWishlist.productId!, quantity: currentQty);
+                                  if (isAddedToCart) {
+                                    logInfo("added item to cart , refreshing cart");
+                                    var temp = await CartService.fetchCartData();
+                                    if (temp.cartSummary?.totalAmount != null) {
+                                      logInfo("cart refreshed");
+                                      cartProvider.setCartDataManually(latestCartData: temp);
+                                      logInfo("cart updated!");
+                                      showCustomToast(msg: "Added to Cart!");
+                                    } else {
+                                      logError("failed to refresh cart");
+                                      showCustomToast(msg: "failed to add to cart..");
+                                    }
+                                  } else {
+                                    logError('failed to add item to cart');
+                                    showCustomToast(msg: "failed to add to cart..");
+                                  }
+                                }
+                              },
+                              icon: Icon(FeatherIcons.shoppingBag, color: Colors.pink, size: 20.r)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
