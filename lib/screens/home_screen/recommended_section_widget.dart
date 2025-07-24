@@ -367,7 +367,7 @@ class _RecommendationSection2State extends State<RecommendationSection2> {
                       child: Text(
                         category.categoryName,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.grey,
+                          color: isSelected ? Colors.white : Colors.black,
                           fontWeight: FontWeight.w600,
                           fontSize: 14.sp,
                         ),

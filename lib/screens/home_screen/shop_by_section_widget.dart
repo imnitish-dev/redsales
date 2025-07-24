@@ -205,8 +205,8 @@ class ShopBySectionWidget2 extends StatelessWidget {
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 0.h,
-              crossAxisSpacing: 6.w,
-              childAspectRatio: 0.9, // Adjust for spacing
+              crossAxisSpacing: 0.w,
+              childAspectRatio: 0.8, // Adjust for spacing
             ),
             itemBuilder: (context, index) {
               final item = shopItems[index];

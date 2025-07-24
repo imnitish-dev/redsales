@@ -3,6 +3,7 @@ import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:twocliq/provider/customer_profile_provider.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/address_screen/add_address_screen.dart';
 import 'package:twocliq/screens/profile_screen/other_profile_screens/address_screen/edit_address_screen.dart';
 
 import '../../../../helper/animatedPage.dart';
@@ -36,6 +37,30 @@ class _AddressListScreenState extends State<AddressListScreen> {
             ),
             customSizedBox(height: 5.h),
 
+            Padding(
+              padding:  EdgeInsets.all(12.r),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48.h,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+
+                    Navigator.of(context).push(openAnimatedPage(
+                       const AddAddressScreen()
+                    ));
+                  },
+                  child :  Text(
+                    "Add New Address",
+                    style: customTextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+
             Expanded(
               child: ListView.builder(
                 physics: const BouncingScrollPhysics(),
@@ -45,52 +70,45 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   final address = userProfileProvider.customerProfile?.addresses?[index];
                  // final isSelected = selectedAddress?.addressId == address.addressId;
               
-                  return GestureDetector(
-                    onTap: () {
-                     /* setModalState(() {
-                        selectedAddress = address; // update selected
-                      });*/
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(12.r),
-                      child: Container(
-                        //margin: EdgeInsets.symmetric(vertical: 8.h),
-                        padding: EdgeInsets.all(22.r),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color: Colors.grey.shade300,
-                            width:  0.4,
-                          ),
+                  return Padding(
+                    padding: EdgeInsets.all(12.r),
+                    child: Container(
+                      //margin: EdgeInsets.symmetric(vertical: 8.h),
+                      padding: EdgeInsets.all(22.r),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width:  0.4,
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
 
-                                children: [
-                                  Text(
-                                    address?.area ?? "Home",
-                                    style: customTextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    "${address?.address}, ${address?.area}, ${address?.city} - ${address?.pincode}",
-                                    style: customTextStyle(fontSize: 14.sp, color: Colors.black54),
-                                  ),
-                                ],
-                              ),
+                              children: [
+                                Text(
+                                  address?.area ?? "Home",
+                                  style: customTextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  "${address?.address}, ${address?.area}, ${address?.city} - ${address?.pincode}",
+                                  style: customTextStyle(fontSize: 14.sp, color: Colors.black54),
+                                ),
+                              ],
                             ),
-                            IconButton(onPressed: (){
-                              Navigator.of(context).push(openAnimatedPage(
-                                  EditAddressScreen(currentAddress: address!)
-                              ));
-                            }, icon: Icon(FeatherIcons.edit2,size: 20.r))
-                          ],
-                        ),
+                          ),
+                          IconButton(onPressed: (){
+                            Navigator.of(context).push(openAnimatedPage(
+                                EditAddressScreen(currentAddress: address!)
+                            ));
+                          }, icon: Icon(FeatherIcons.edit2,size: 20.r))
+                        ],
                       ),
                     ),
                   );

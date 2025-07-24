@@ -8,7 +8,7 @@ import 'package:twocliq/screens/profile_screen/other_profile_screens/my_profile_
 import 'package:twocliq/screens/profile_screen/other_profile_screens/order_history_screens/order_history_screen.dart';
 import 'package:twocliq/screens/profile_screen/other_profile_screens/change_password_screen.dart';
 import 'package:twocliq/screens/profile_screen/other_profile_screens/wallet_screen.dart';
-import 'package:twocliq/screens/wishlist_screen.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/wishlist_screen.dart';
 import '../../helper/animatedPage.dart';
 
 class ProfileScreen extends StatefulWidget {

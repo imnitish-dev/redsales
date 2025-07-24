@@ -1,94 +1,40 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:twocliq/helper/constants.dart';
-import 'package:twocliq/provider/cart_provider.dart';
-import 'package:twocliq/provider/wishlist_provider.dart';
-import 'package:twocliq/services/cart_service.dart';
-import 'package:twocliq/services/wishlist_service.dart';
 import '../../../helper/animatedPage.dart';
+import '../../../helper/constants.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+
 import '../../../models/cart_list_model.dart';
 import '../../../models/wishlist_model.dart';
+import '../../../provider/cart_provider.dart';
 import '../../../provider/home_provider.dart';
+import '../../../provider/wishlist_provider.dart';
+import '../../../services/cart_service.dart';
+import '../../../services/wishlist_service.dart';
 import '../../product_detail_screen/product_detail_screen.dart';
 
-class FromWishlistWidget extends StatefulWidget {
-  const FromWishlistWidget({super.key});
+class WishlistScreen extends StatefulWidget {
+  const WishlistScreen({super.key});
 
   @override
-  State<FromWishlistWidget> createState() => _FromWishlistWidgetState();
+  State<WishlistScreen> createState() => _WishlistScreenState();
 }
 
-class _FromWishlistWidgetState extends State<FromWishlistWidget> {
+class _WishlistScreenState extends State<WishlistScreen> {
   bool isLoading = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<WishlistProvider>(
-      builder: (context, provider, _) {
-        switch (provider.status) {
-          case ApiLoadingState.loading:
-            return customSizedBox();
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 15.r,
-                  width: 15.r,
-                  child: Padding(
-                    padding: EdgeInsets.all(13.r),
-                    child: const CircularProgressIndicator(
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                )
-              ],
-            );
-
-          case ApiLoadingState.error:
-            return customSizedBox();
-            return Center(
-              child: Text(
-                provider.errorMessage ?? "Failed to load",
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-
-          case ApiLoadingState.success:
-            return provider.wishlist!.isEmpty
-                ? customSizedBox()
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 26.w),
-                        child: Text(
-                          "From Your Wishlist",
-                          style: customTextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      customSizedBox(height: 12.h),
-                      ListView.builder(
-                        padding: EdgeInsets.all(16.w),
-                        itemCount: provider.wishlist!.length,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          final item = provider.wishlist![index];
-                          return wishlistWidget(currentWishlist: item);
-                        },
-                      ),
-                    ],
-                  );
-        }
-      },
-    );
+  void initState() {
+    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark));
   }
 
   Widget wishlistWidget({required WishlistItem currentWishlist}) {
@@ -245,5 +191,79 @@ class _FromWishlistWidgetState extends State<FromWishlistWidget> {
       ),
     );
   }
-}
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(
+                      FeatherIcons.chevronLeft,
+                      size: 30.r,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    "Wishlist",
+                    style: customTextStyle(
+                      fontSize: 20.sp,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              customSizedBox(height: 20.h),
+
+              /// Product List
+
+              Consumer<WishlistProvider>(
+                builder: (context, provider, _) {
+                  switch (provider.status) {
+                    case ApiLoadingState.loading:
+                      return customSizedBox();
+
+                    case ApiLoadingState.error:
+                      return customSizedBox();
+
+                    case ApiLoadingState.success:
+                      return provider.wishlist!.isEmpty
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text("Empty Wishlist")],
+                            )
+                          : Expanded(
+                              child: ListView.builder(
+                                padding: EdgeInsets.all(16.w),
+                                itemCount: provider.wishlist!.length,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, index) {
+                                  final item = provider.wishlist![index];
+                                  return wishlistWidget(currentWishlist: item);
+                                },
+                              ),
+                            );
+                  }
+                },
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

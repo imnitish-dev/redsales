@@ -2,8 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:twocliq/helper/constants.dart';
 
-class MyProfileScreen extends StatelessWidget {
+import '../../auth_screens/widgets/state_selector_widget.dart';
+
+class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
+
+  @override
+  State<MyProfileScreen> createState() => _MyProfileScreenState();
+}
+
+class _MyProfileScreenState extends State<MyProfileScreen> {
+
+  final nameController = TextEditingController();
+  final GlobalKey<FormState> nameKey = GlobalKey<FormState>();
+
+  final emailController = TextEditingController();
+  final GlobalKey<FormState> emailKey = GlobalKey<FormState>();
+
+  final enterpriseNameController = TextEditingController();
+  final GlobalKey<FormState> enterpriseNameKey = GlobalKey<FormState>();
+
+  final addressLine1Controller = TextEditingController();
+  final GlobalKey<FormState> addressLine1Key = GlobalKey<FormState>();
+
+  final addressLine2Controller = TextEditingController();
+  final GlobalKey<FormState> addressLine2Key = GlobalKey<FormState>();
+
+  final cityController = TextEditingController();
+  final GlobalKey<FormState> cityKey = GlobalKey<FormState>();
+
+  final pinCodeController = TextEditingController();
+  final GlobalKey<FormState> pinCodeKey = GlobalKey<FormState>();
+
+  String? selectedState;
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +42,7 @@ class MyProfileScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 12.h),
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -24,10 +55,10 @@ class MyProfileScreen extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.arrow_back_ios, size: 18),
                     ),
-                    SizedBox(width: 4.w),
+                    customSizedBox(width: 4.w),
                     Text(
                       "My Profile",
-                      style: TextStyle(
+                      style: customTextStyle(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.bold,
                       ),
@@ -36,61 +67,106 @@ class MyProfileScreen extends StatelessWidget {
                 ),
                 customSizedBox(height: 16.h),
 
-                // Form Fields
-                _buildLabel("Business Name"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Business Name"),
-                customSizedBox(height: 12.h),
+                AppTextField(
+                    controller: nameController,
+                    customKeyboardType: TextInputType.text,
+                    formKey: nameKey,
+                    label: 'Name',
+                    canBeEmpty: false),
 
-                _buildLabel("Business Phone Number"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Phone Number"),
-                customSizedBox(height: 12.h),
+                customSizedBox(height: 15.h),
 
-                _buildLabel("Business Type"),
-                customSizedBox(height: 8.h),
-                _buildDropdown(["Retail", "Wholesale", "Service"]),
-                customSizedBox(height: 12.h),
+                AppTextField(
+                    controller: emailController,
+                    customKeyboardType: TextInputType.text,
+                    formKey: emailKey,
+                    label: 'Email',
+                    canBeEmpty: false),
 
-                _buildLabel("Phone Number"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Phone Number"),
-                customSizedBox(height: 12.h),
+                customSizedBox(height: 15.h),
 
-                _buildLabel("Whatsapp Number"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Whatsapp Number"),
-                customSizedBox(height: 12.h),
+                AppTextField(
+                    controller: enterpriseNameController,
+                    customKeyboardType: TextInputType.text,
+                    formKey: enterpriseNameKey,
+                    label: 'Enterprise Name',
+                    canBeEmpty: false),
 
-                _buildLabel("Email Address"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Email Address"),
-                customSizedBox(height: 12.h),
+                customSizedBox(height: 15.h),
 
-                _buildLabel("Password"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Password", isPassword: true),
-                customSizedBox(height: 12.h),
+                AppTextField(
+                    controller: addressLine1Controller,
+                    customKeyboardType: TextInputType.text,
+                    formKey: addressLine1Key,
+                    label: 'Address Line 1',
+                    canBeEmpty: false),
 
-                _buildLabel("Address"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Address"),
-                customSizedBox(height: 12.h),
+                customSizedBox(height: 15.h),
 
-                _buildLabel("Aadhar Card Number"),
-                customSizedBox(height: 8.h),
-                _buildTextField("Enter Your Aadhar Card Number"),
-                customSizedBox(height: 12.h),
+                AppTextField(
+                    controller: addressLine2Controller,
+                    customKeyboardType: TextInputType.text,
+                    formKey: addressLine2Key,
+                    label: 'Address Line 2',
+                    canBeEmpty: false),
 
-                _buildLabel("PAN/Udyam/GST"),
-                customSizedBox(height: 8.h),
-                _buildTextField("No Input", isEnabled: false),
-                customSizedBox(height: 12.h),
+                customSizedBox(height: 15.h),
 
-                _buildLabel("PAN/Udyam/GST Upload"),
-                customSizedBox(height: 8.h),
-                _buildMultilineField(""),
-                customSizedBox(height: 20.h),
+                AppTextField(
+                    controller: cityController,
+                    customKeyboardType: TextInputType.text,
+                    formKey: cityKey,
+                    label: 'City',
+                    canBeEmpty: false),
+
+                customSizedBox(height: 15.h),
+
+                AppTextField(
+                    controller: pinCodeController,
+                    customKeyboardType: TextInputType.number,
+                    formKey: pinCodeKey,
+                    label: 'Pin Code',
+                    canBeEmpty: false),
+
+                customSizedBox(height: 15.h),
+
+                Padding(
+                  padding: EdgeInsets.only(left: 5.w),
+                  child: Row(
+                    children: [
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: customTextStyle(fontSize: 14, color: Colors.black54),
+                          children: [
+                            TextSpan(
+                                text: "State ",
+                                style: customTextStyle(
+                                    fontSize: 16.sp, fontWeight: FontWeight.normal, color: Colors.black)),
+                            TextSpan(
+                                text: "*",
+                                style: customTextStyle(
+                                    fontSize: 16.sp, fontWeight: FontWeight.normal, color: Colors.redAccent))
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                customSizedBox(height: 15.h),
+
+                StateSelector(
+                  selectedState: selectedState,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedState = value;
+                    });
+                  },
+                ),
+
+
+                customSizedBox(height: 25.h),
 
 
                 SizedBox(
@@ -114,6 +190,9 @@ class MyProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+
+
+
               ],
             ),
           ),
@@ -159,9 +238,6 @@ class MyProfileScreen extends StatelessWidget {
     ;
   }
 
-
-
-
    Widget _buildDropdown(List<String> options) {
     return DropdownButtonFormField<String>(
       dropdownColor: Colors.grey.shade50, // Background color of opened menu
@@ -190,9 +266,6 @@ class MyProfileScreen extends StatelessWidget {
       ),
     );
   }
-
-
-
 
   Widget _buildMultilineField(String hint) {
     return TextField(

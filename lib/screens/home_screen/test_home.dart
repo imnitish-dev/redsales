@@ -17,6 +17,7 @@ import '../../provider/home_provider.dart';
 import '../widgets/shimmer_widget.dart';
 import 'announcement_widget.dart';
 import 'beauty_carousel.dart';
+import 'features_widget.dart';
 import 'home_header_widget.dart';
 import 'product_icons_horizontal_list.dart';
 
@@ -54,66 +55,35 @@ class _TestHomeState extends State<TestHome> {
               children: [
                 const HomeHeaderWidget(cartCount: 5, notificationCount: 4),
                 Expanded(
-                  child: ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    shrinkWrap: true,
-                    //padding: const EdgeInsets.all(16),
-                    itemCount: homeData.home.length,
-                    itemBuilder: (context, index) {
-                      final section = homeData.home[index];
-                      return Padding(
-                        padding:  EdgeInsets.only(top: 5.h,bottom: 5.h),
-                        child: _buildSection(section),
-                      );
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (section.displayTitle.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                section.displayTitle + section.viewType.toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          shrinkWrap: true,
+                          //padding: const EdgeInsets.all(16),
+                          itemCount: homeData.home.length,
+                          itemBuilder: (context, index) {
+                            final section = homeData.home[index];
+                            return Padding(
+                              padding:  EdgeInsets.only(top: 5.h,bottom: 5.h),
+                              child: Column(
+                                children: [
+                                  _buildSection(section),
+                                ],
                               ),
-                            ),
-                          _buildSection(section),
-                          const SizedBox(height: 16),
-                        ],
-                      );
-                    },
+                            );
+                          },
+                        ),
+                        FeaturesSectionWidget()
+                      ],
+                    ),
                   ),
                 ),
+
+
               ],
             );
-
-          /* return ListView.builder(
-             // padding: const EdgeInsets.all(16),
-              itemCount: homeData.home.length,
-              itemBuilder: (context, index) {
-                final section = homeData.home[index];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (section.displayTitle.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          section.displayTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    _buildSection(section),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              },
-            );*/
         }
       },
     );

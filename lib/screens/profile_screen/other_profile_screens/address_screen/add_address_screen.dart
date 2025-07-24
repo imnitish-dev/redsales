@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:twocliq/helper/address_types_list.dart';
-import 'package:twocliq/helper/indian_states_list.dart';
+
 import '../../../../helper/constants.dart';
-import '../../../../models/customer_profile_model.dart';
 import '../../../../provider/customer_profile_provider.dart';
 import '../../../../services/customer_profile_service.dart';
 import '../../../auth_screens/widgets/address_type_selector.dart';
 import '../../../auth_screens/widgets/state_selector_widget.dart';
 
-class EditAddressScreen extends StatefulWidget {
-  final Address currentAddress;
-  const EditAddressScreen({super.key, required this.currentAddress});
+class AddAddressScreen extends StatefulWidget {
+  const AddAddressScreen({super.key});
 
   @override
-  State<EditAddressScreen> createState() => _EditAddressScreenState();
+  State<AddAddressScreen> createState() => _AddAddressScreenState();
 }
 
-class _EditAddressScreenState extends State<EditAddressScreen> {
+class _AddAddressScreenState extends State<AddAddressScreen> {
 
   final addressController = TextEditingController();
   final GlobalKey<FormState> addressKey = GlobalKey<FormState>();
@@ -44,41 +41,6 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   String? selectedAddressType;
 
   @override
-  void initState() {
-    if (widget.currentAddress.address != null || widget.currentAddress.address!.isNotEmpty) {
-      addressController.text = widget.currentAddress.address!;
-    }
-    if (widget.currentAddress.area != null || widget.currentAddress.area!.isNotEmpty) {
-      areaController.text = widget.currentAddress.area!;
-    }
-    if (widget.currentAddress.landmark != null || widget.currentAddress.landmark!.isNotEmpty) {
-      landmarkController.text = widget.currentAddress.landmark!;
-    }
-
-    if (widget.currentAddress.pincode != null || widget.currentAddress.pincode!.isNotEmpty) {
-      pinCodeController.text = widget.currentAddress.pincode!;
-    }
-
-    if (widget.currentAddress.city != null || widget.currentAddress.city!.isNotEmpty) {
-      cityController.text = widget.currentAddress.city!;
-    }
-
-    if (indianStates.contains(widget.currentAddress.state)) {
-      setState(() {
-        selectedState = widget.currentAddress.state;
-      });
-    }
-
-    if(addressTypes.contains(widget.currentAddress.addressType)){
-      setState(() {
-        selectedAddressType = widget.currentAddress.addressType;
-      });
-    }
-
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final userProfileProvider = Provider.of<CustomerProfileProvider>(context);
     return Scaffold(
@@ -91,7 +53,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
               customSizedBox(height: 20.h),
               Center(
                 child: Text(
-                  "Edit Address",
+                  "Add New Address",
                   style: customTextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -239,10 +201,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                             return;
                           }
 
-                          if(widget.currentAddress.addressId==null){
-                            showErrorToast(msg: "something went wrong");
-                            return;
-                          }
+
 
                           logInfo("ready to go!");
 
@@ -251,24 +210,24 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                           });
 
 
-                          bool isChangePushed = await CustomerService.updateCustomerAddress(
-                              addressId: widget.currentAddress.addressId!,
+                          bool isAddressAdded = await CustomerService.addCustomerAddress(
                               addressType: selectedAddressType!,
                               address: addressController.text,
                               area: areaController.text,
                               landmark: landmarkController.text,
                               pincode: pinCodeController.text,
                               city: cityController.text,
-                              state: selectedState!);
+                              state: selectedState!
+                          );
 
-                          if(isChangePushed){
-                           bool refreshProfile =  await userProfileProvider.loadProfileData();
-                           if(refreshProfile){
-                             showCustomToast(msg: "address updated!");
-                             Navigator.pop(context);
-                           }else{
-                             showErrorToast(msg: "failed to update address..");
-                           }
+                          if(isAddressAdded){
+                            bool refreshProfile =  await userProfileProvider.loadProfileData();
+                            if(refreshProfile){
+                              showCustomToast(msg: "address updated!");
+                              Navigator.pop(context);
+                            }else{
+                              showErrorToast(msg: "failed to update address..");
+                            }
                           }else{
                             showErrorToast(msg: "failed to update address..");
                           }
@@ -295,68 +254,6 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                       ),
                     ),
                     customSizedBox(height: 10.h),
-                    SizedBox(
-                        width: double.infinity,
-                        height: 48.h,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(color: Colors.redAccent, width: 0.5), // red border
-                            ),
-                          ),
-                          onPressed: () async {
-                            setState(() {
-                              isDeleteLoading = true;
-                            });
-
-
-
-                            if(widget.currentAddress.addressId==null){
-                              showErrorToast(msg: "something went wrong!");
-                              return;
-                            }
-
-                            bool isChangePushed = await CustomerService.deleteCustomerAddress(
-                            addressId: widget.currentAddress.addressId!
-                            );
-
-                            if(isChangePushed){
-                              bool refreshProfile =  await userProfileProvider.loadProfileData();
-                              if(refreshProfile){
-                                showCustomToast(msg: "address deleted!");
-                                Navigator.pop(context);
-                              }else{
-                                showErrorToast(msg: "failed to update address..");
-                              }
-                            }else{
-                              showErrorToast(msg: "failed to update address..");
-                            }
-
-                            setState(() {
-                              isDeleteLoading = false;
-                            });
-                          },
-                          child:  isDeleteLoading ? Center(
-
-                            child: SizedBox(
-                              width: 20.r,
-                              height: 20.r,
-                              child: const CircularProgressIndicator(
-                                color: Colors.pinkAccent,
-                              ),
-                            ),
-
-                          )  : Text(
-                            "Delete Address",
-                            style: customTextStyle(
-                              fontSize: 16.sp,
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )),
                   ],
                 ),
               ),

@@ -11,20 +11,6 @@ import '../../../helper/animatedPage.dart';
 import '../../../models/cart_list_model.dart';
 import '../../../provider/home_provider.dart';
 import '../../../services/cart_service.dart';
-import '../../widgets/shimmer_widget.dart';
-
-/// Cart Item Model
-class CartItem {
-  final String imageUrl;
-  final String description;
-  final String price;
-
-  CartItem({
-    required this.imageUrl,
-    required this.description,
-    required this.price,
-  });
-}
 
 class CartItemListWidget extends StatefulWidget {
   const CartItemListWidget({super.key});
@@ -63,6 +49,8 @@ class _CartItemListWidgetState extends State<CartItemListWidget> {
       ),
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {

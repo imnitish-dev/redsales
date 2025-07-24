@@ -88,8 +88,8 @@ class ProductIconsHorizontalList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFFfffaf5),
-      padding: EdgeInsets.symmetric(vertical: 12.h),
-      height: 140.h,
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      height: 135.h,
       alignment: Alignment.center,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,12 +110,12 @@ class ProductIconsHorizontalList extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.symmetric(horizontal: 5.w),
               itemCount: brands.length,
               itemBuilder: (context, index) {
                 final brand = brands[index];
                 return Padding(
-                  padding: EdgeInsets.only(right: 20.w, top: 10.h),
+                  padding: EdgeInsets.only(right: 5.w, top: 10.h),
                   child: Column(
                     children: [
                       ClipOval(

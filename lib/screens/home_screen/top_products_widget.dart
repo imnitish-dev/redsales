@@ -69,41 +69,23 @@ class TopProductsSection2 extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
                 final product = topProducts[index];
-                return Padding(
-                  padding: EdgeInsets.only(right: 16.w),
-                  child: GestureDetector(
-                    onTap: () {
-                      final clickDetails = product.clickDetails;
-                      if (clickDetails != null) {
-                        // Handle navigation or event
-                        debugPrint(
-                            "Navigate to ${clickDetails.targetScreen} with data: ${clickDetails.targetData?.typeValue}");
-                      }
-                    },
-                    child: Container(
-                      width: 86.r,
-                      height: 86.r,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDF7F2), // Soft pink background
-                        borderRadius: BorderRadius.circular(12.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(2, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Image.network(
-                          product.imageUrl ?? '',
-                          width: 85.r,
-                          height: 85.r,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.broken_image, color: Colors.grey),
-                        ),
-                      ),
+                return GestureDetector(
+                  onTap: () {
+                    final clickDetails = product.clickDetails;
+                    if (clickDetails != null) {
+                      // Handle navigation or event
+                      debugPrint(
+                          "Navigate to ${clickDetails.targetScreen} with data: ${clickDetails.targetData?.typeValue}");
+                    }
+                  },
+                  child: Center(
+                    child: Image.network(
+                      product.imageUrl ?? '',
+                      width: 95.r,
+                      height: 95.r,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image, color: Colors.grey),
                     ),
                   ),
                 );

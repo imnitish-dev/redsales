@@ -179,7 +179,7 @@ class _CartScreenState extends State<CartScreen> {
                                       TextSpan(
                                           text: provider.cartList?.cartSummary?.totalAmount.toString(),
                                           style: customTextStyle(
-                                              fontSize: 20.sp, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                                              fontSize: 20.sp, fontWeight: FontWeight.bold, color: Colors.pink)),
                                     ],
                                   ),
                                 );
