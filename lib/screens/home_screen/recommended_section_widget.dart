@@ -311,10 +311,10 @@ class _RecommendationSection2State extends State<RecommendationSection2> {
                   padding: EdgeInsets.only(left: 15.w),
                   child: Text(
                     "Recommended Products",
-                    style: TextStyle(
-                      fontSize: 20.sp,
+                    style: customTextStyle(
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black,
                     ),
                   ),
                 ),

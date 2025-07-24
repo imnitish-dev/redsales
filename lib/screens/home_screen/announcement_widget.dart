@@ -107,7 +107,7 @@ class _AnnouncementCarouselState extends State<AnnouncementCarousel> {
             return _buildAnnouncementCard(item);
           },
           options: CarouselOptions(
-            height: 140.h,
+            height: 100.h,
             viewportFraction: 0.9,
             enlargeCenterPage: true,
             autoPlay: true,
@@ -175,11 +175,12 @@ class _AnnouncementCarouselState extends State<AnnouncementCarousel> {
                   ),
                   customSizedBox(height: 6.h),
                   Text(
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas hendrerit luctus libero ac vulputate.",
-                    maxLines: 3,
+                    item.announcementText??"",
+                   // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas hendrerit luctus libero ac vulputate.",
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 13.sp,
+                      fontSize: 12.sp,
                       fontFamily: "Poppins",
                       color: Colors.grey[700],
                       height: 1.3,

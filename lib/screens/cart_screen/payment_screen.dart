@@ -8,9 +8,13 @@ import 'package:twocliq/provider/cart_provider.dart';
 import 'package:twocliq/provider/customer_profile_provider.dart';
 import 'package:twocliq/screens/cart_screen/widgets/checkout_footer_widget.dart';
 import 'package:twocliq/screens/cart_screen/widgets/voucher_widget.dart';
+import 'package:twocliq/screens/profile_screen/other_profile_screens/my_profile_screen.dart';
+import 'package:twocliq/screens/profile_screen/profile_screen.dart';
 
+import '../../helper/animatedPage.dart';
 import '../../models/customer_profile_model.dart';
 import '../../services/customer_profile_service.dart';
+import '../product_detail_screen/product_detail_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -646,7 +650,7 @@ class ContactWidget extends StatelessWidget {
               icon: const Icon(Icons.edit, color: Colors.pink),
               onPressed: () {
                /* onEdit(contactInfo.copyWith(phone: "+91-99999-00000"));*/
-
+                Navigator.of(context).push(openAnimatedPage(const MyProfileScreen()));
               },
             )
           ],

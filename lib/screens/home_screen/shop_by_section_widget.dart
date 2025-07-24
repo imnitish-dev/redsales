@@ -189,9 +189,9 @@ class ShopBySectionWidget2 extends StatelessWidget {
             child: Text(
               "Shop By",
               style: TextStyle(
-                fontSize: 20.sp,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.black.withOpacity(0.8),
+                color: Colors.black,
               ),
             ),
           ),
@@ -230,7 +230,6 @@ class ShopBySectionWidget2 extends StatelessWidget {
                       ),
                     ),
 
-                   // customSizedBox(height: 2.h),
 
                     /// Label
                     Text(
@@ -247,131 +246,7 @@ class ShopBySectionWidget2 extends StatelessWidget {
                 ),
               );
             },
-          ),
-
-          /*GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: shopItems.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Always 2 items per row
-              mainAxisSpacing: 0.h,
-              crossAxisSpacing: 15.w,
-              childAspectRatio: 1, // Adjust height/width ratio
-            ),
-            itemBuilder: (context, index) {
-              final item = shopItems[index];
-              return GestureDetector(
-                onTap: () {
-                  // Handle navigation or tap
-                },
-                child: Column(
-                  children: [
-                    /// Image container with equal width
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: Image.network(
-                        item.imageUrl,
-                        width: double.infinity,
-                        height: 120.h,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-
-                    SizedBox(height: 12.h),
-
-                    /// Label text
-                    Text(
-                      item.displayText,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          )*/
-        ],
-      ),
-    );
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// Section Title
-          Padding(
-            padding: EdgeInsets.only(left: 10.w),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black.withOpacity(0.5),
-              ),
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          /// Grid of Categories
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: shopItems.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Always 2 per row (consistent layout)
-              mainAxisSpacing: 16.h,
-              crossAxisSpacing: 15.w,
-              childAspectRatio: 1,
-            ),
-            itemBuilder: (context, index) {
-              final item = shopItems[index];
-              return GestureDetector(
-                onTap: () {
-                  // Handle navigation using item.clickDetails
-                  if (item.clickDetails != null) {
-                    print("Navigate to: ${item.clickDetails!.targetScreen}");
-                  }
-                },
-                child: Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.r),
-                      child: Image.network(
-                        item.imageUrl,
-                        width: double.infinity,
-                        height: 120.h,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          width: double.infinity,
-                          height: 120.h,
-                          color: Colors.grey.shade200,
-                          child: Icon(Icons.image_not_supported, size: 40.sp),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Text(
-                      item.displayText,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+          )
         ],
       ),
     );

@@ -172,11 +172,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                           provider.currentProductDetail?.productDetails?.productTitle ?? '',
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 2,
-                                          //"Granactive Retinoid 5%",
                                           style: customTextStyle(
-                                            fontSize: 18.sp,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black.withOpacity(0.6),
+                                            fontSize: 15.sp,
+                                            fontWeight: FontWeight.normal,
+                                            color: Colors.black,
                                           ),
                                         ),
                                       )
